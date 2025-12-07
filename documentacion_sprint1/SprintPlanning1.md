@@ -19,7 +19,7 @@ Implementar la funcionalidad básica para que un usuario pueda registrarse, inic
 **Total Story Points:** 21
 
 ### Sprint Backlog
-- Crear pantalla de registro – Mariana (DEV1)  
+- Crear splash screen – Mariana (DEV1)  
 - Implementar validación de registro – Itzia 
 - Crear pantalla de inicio de sesión – Yahaira (DEV2)  
 - Implementar lógica de autenticación – Yahaira (DEV2)  
