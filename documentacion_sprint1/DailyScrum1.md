@@ -9,7 +9,7 @@
 
 - **Yahaira (DEV2)**  
   - ¿Qué hice ayer?: Pantalla de registro de usuario
-  - ¿Qué haré hoy?: Implementar configuracion inicial del calendario 
+  - ¿Qué haré hoy?: Implementar configuracion inicial del test 
   - Impedimentos detectados: Problemas del movimiento de pantallas
 
 - **Itzia (PO/SM)**  
