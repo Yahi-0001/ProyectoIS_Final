@@ -16,6 +16,25 @@ Implementar la funcionalidad básica para que un usuario pueda registrarse, inic
 - **HU-04 – Reiniciar contador por episodio de ansiedad**    
   Story Points: 5
 
+
+- **HU-06 – Calendario emocional**    
+  Story Points: 5
+
+- **HU-06 – Calendario emocional**    
+  Story Points: 5
+
+- **HU-07 – Ver historial emocional en el calendario**    
+  Story Points: 8
+  
+  
+- **HU-09 – Perfil del usuario (local)**    
+  Story Points: 3
+
+- **HU-10 – Si sufro ansiedad que la app me ayude en el momento**    
+  Story Points: 2
+
+
+  
 **Total Story Points:** 21
 
 ### Sprint Backlog
