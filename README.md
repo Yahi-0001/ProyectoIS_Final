@@ -1,50 +1,170 @@
-# Welcome to your Expo app 👋
+# Product Backlog
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+---
 
-## Get started
+### **HU-01 – Registro local**  
 
-1. Install dependencies
+**Como usuario nuevo**,  
+quiero registrarme creando mis datos en el dispositivo,  
+para poder acceder a la app sin conexión a internet.  
 
-   ```bash
-   npm install
-   ```
+**Criterios de aceptación:**  
+- La app permite ingresar nombre, correo y contraseña.  
+- Los datos se guardan solo localmente (LocalStorage u otro).  
+- Debe validar campos vacíos y formato de correo.  
 
-2. Start the app
+**Prioridad:** Alta  
+**Story Points:** 5  
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+### **HU-02 – Inicio de sesión local**  
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+**Como usuario registrado**,  
+quiero iniciar sesión en el dispositivo,  
+para acceder a mis funciones personalizadas.  
 
-## Get a fresh project
+**Criterios de aceptación:**  
+- Se valida contra la información almacenada localmente.  
+- Si la contraseña es incorrecta, muestra error.  
+- Permite cerrar sesión y volver a la pantalla de login.  
 
-When you're ready, run:
+**Prioridad:** Alta  
+**Story Points:** 3  
 
-```bash
-npm run reset-project
-```
+---
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### **HU-03 – Iniciar contador del Ansiouslómetro**  
 
-## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
+**Como usuario que quiere medir mi ansiedad**,  
+quiero iniciar un contador de tiempo sin ansiedad (días, horas, minutos, segundos),  
+para saber cuánto tiempo llevo estable e incentivarme.  
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+**Criterios de aceptación:**  
+- El contador inicia cuando el usuario pulsa “No tengo ansiedad”.  
+- Muestra tiempo en tiempo real (días:hh:mm:ss).  
+- Se guarda localmente el timestamp de inicio para mantenerlo entre sesiones (si la app se cierra y vuelve a abrir).  
 
-## Join the community
+**Prioridad:** Alta  
+**Story Points:** 8  
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### **HU-04 – Reiniciar contador por episodio de ansiedad**  
+
+**Como usuario**,  
+quiero reiniciar mi contador si tengo ansiedad,  
+para llevar un registro honesto de mis avances.  
+
+**Criterios de aceptación:**  
+- Botón “Tuve ansiedad” reinicia el contador a 0.  
+- El sistema solicita confirmación antes de reiniciar.  
+- Se guarda localmente un registro del evento (fecha y hora) en memoria.  
+
+**Prioridad:** Alta  
+**Story Points:** 5  
+
+---
+
+### **HU-05 – Ejercicios rápidos para reducir ansiedad**  
+
+
+**Como usuario**,  
+quiero ver una lista de ejercicios o técnicas de respiración disponibles offline,  
+para calmarme cuando tenga un episodio y seguir recomendaciones confiables.  
+
+**Criterios de aceptación:**  
+- Debe incluir al menos 5 ejercicios con pasos claros.  
+- El contenido y orden lo define y valida Itzia (PO) para asegurar calidad.  
+- Al pulsar “Necesito ayuda” se muestra un ejercicio sugerido (aleatorio o el recomendado por Itzia).  
+
+**Prioridad:** Media  
+**Story Points:** 5  
+
+---
+
+### **HU-06 – Calendario emocional**  
+
+
+**Como usuario**,  
+quiero registrar cómo me siento cada día desde un calendario,  
+para visualizar mis patrones emocionales.  
+
+**Criterios de aceptación:**  
+- Permite seleccionar un día y elegir entre emociones predefinidas (feliz, ansioso, triste, neutro...).  
+- El día cambia de color según la emoción seleccionada.  
+- Los registros se guardan localmente y son editables mientras la app esté instalada.  
+
+**Prioridad:** Media  
+**Story Points:** 5  
+
+---
+
+### **HU-07 – Ver historial emocional en el calendario**  
+
+
+**Como usuario**,  
+quiero ver símbolos o colores en el calendario que indiquen mi estado por día,  
+para identificar fácilmente tendencias sin necesidad de persistencia remota.  
+
+**Criterios de aceptación:**  
+- Cada emoción tiene un color o ícono definido.  
+- Al tocar un día marcado, muestra el detalle (nivel / nota).  
+- Carga la información desde almacenamiento local.  
+
+**Prioridad:** Media  
+**Story Points:** 8  
+
+---
+
+### **HU-08 – Checking inicial para saber como se encuentra el usuario**  
+
+**Como usuario**,  
+quiero realizar un checking y recibir una sugerencia,  
+para evaluar mi estado y recibir orientación inmediata.  
+
+**Criterios de aceptación:**  
+- El cuestionario tiene mínimo 3 preguntas sencillas.  
+- Itzia define las preguntas y las sugerencias asociadas (PO).  
+- Al completar, muestra una sugerencia o ejercicio (offline) y guarda resultado localmente.  
+
+**Prioridad:** Media  
+**Story Points:** 5  
+
+---
+
+### **HU-09 – Perfil del usuario (local)**  
+
+
+**Como usuario**,  
+quiero ver y editar mis datos básicos guardados en el dispositivo,  
+para mantener mi información actualizada sin conexión.  
+
+**Criterios de aceptación:**  
+- Muestra nombre, correo y avatar desde almacenamiento local.  
+- Permite editar nombre y cambiar avatar (archivo local).  
+- Cambios se guardan localmente y se confirman con un mensaje.  
+
+**Prioridad:** Media  
+**Story Points:** 3  
+
+---
+
+### **HU-10 – Si sufro ansiedad que la app me ayude en el momento**  
+
+
+**Como usuario**,  
+quiero un acceso rápido a ejercicios o frases calmantes,  
+para obtener apoyo inmediato cuando me siento mal.  
+
+**Criterios de aceptación:**  
+- Botón visible en pantalla principal que abre recursos inmediatos (ejercicio corto, frase calmante).  
+- Itzia define el contenido y orden de los recursos.  
+- Funciona completamente sin internet y no guarda datos sensibles.  
+
+**Prioridad:** Baja  
+**Story Points:** 2  
+
+---
