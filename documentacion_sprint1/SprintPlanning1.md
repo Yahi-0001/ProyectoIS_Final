@@ -20,7 +20,7 @@ Implementar la funcionalidad básica para que un usuario pueda registrarse, inic
 
 ### Sprint Backlog
 - Crear splash screen – Mariana (DEV1)  
-- Implementar validación de registro – Itzia 
+- Diseño de inicio sesión – Itzia 
 - Crear pantalla de inicio de sesión – Yahaira (DEV2)  
 - Implementar lógica de autenticación – Yahaira (DEV2)  
 - Integrar inicio del contador del Ansiouslómetro – Mariana (DEV1)  
