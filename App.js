@@ -6,9 +6,12 @@ import 'react-native-reanimated';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+
 import Inicio from './screens/inicio';
 import Login from './screens/login';
 import Registro from './screens/registro';
+import Test from './screens/test';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -23,6 +26,8 @@ export default function App() {
         <Stack.Screen name="Inicio" component={Inicio} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Registro" component={Registro} />
+        <Stack.Screen name="Test" component={Test} />
+       
         
 
       </Stack.Navigator>
