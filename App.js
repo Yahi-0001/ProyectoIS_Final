@@ -1,5 +1,3 @@
-
-
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
@@ -7,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 
+import Anxiosimetro from './screens/anxiosimetro';
 import Inicio from './screens/inicio';
 import Login from './screens/login';
 import Registro from './screens/registro';
@@ -27,6 +26,7 @@ export default function App() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Registro" component={Registro} />
         <Stack.Screen name="Test" component={Test} />
+        <Stack.Screen name="Anxiosimetro" component={Anxiosimetro} />
        
         
 
@@ -34,4 +34,3 @@ export default function App() {
     </NavigationContainer>
   );
 }
-
