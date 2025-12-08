@@ -173,21 +173,27 @@ export default function CheckingScreen({ navigation }) {
     }
   };
 
+  // TEST PERSONALIDAD ------------------------------------------------
   const handleTestPersonalidad = async () => {
-    if (testPersonalidadHecho) {
-      return;
-    }
-
     try {
-      await AsyncStorage.setItem("testPersonalidadHecho", "SI");
-      setTestPersonalidadHecho(true);
+      // Si ya está hecho -> no navegar otra vez
+      const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
+      if (testYaHecho === "SI" || testPersonalidadHecho) {
+        setTestPersonalidadHecho(true);
+        return;
+      }
 
-      // Más adelante:
-      // navigation.navigate("TestPersonalidad");
-    } catch (e) {
-      console.log("Error guardando test personalidad:", e);
+      // Si no está hecho, simplemente navega a la pantalla del test.
+      // En la pantalla "TestPersonalidad" es donde se hace:
+      // - Guardar testPersonalidadHecho = "SI"
+      // - Guardar testPersonalidadResultado con score + answers
+      navigation.navigate("TestPersonalidad");
+    } catch (error) {
+      console.log("Error revisando test personalidad:", error);
     }
   };
+  // --------------------------------------------------------------
+
 
   const handleLeerAnsiedad = () => {
     // Más adelante:

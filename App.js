@@ -16,6 +16,7 @@ import Perfil from './screens/perfil';
 import Registro from './screens/registro';
 import Test from './screens/test';
 import TestDiario from './screens/TestDiario';
+import TestPersonalidad from "./screens/TestPersonalidad";
 
 const Stack = createNativeStackNavigator();
 
@@ -37,6 +38,7 @@ export default function App() {
           <Stack.Screen name="Perfil" component={Perfil} />
           <Stack.Screen name="Checking" component={CheckingScreen}/>
           <Stack.Screen name="TestDiario" component={TestDiario}/>
+          <Stack.Screen name="TestPersonalidad" component={TestPersonalidad} />
 
         </Stack.Navigator>
       </NavigationContainer>
