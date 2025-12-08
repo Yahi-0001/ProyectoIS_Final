@@ -11,6 +11,7 @@ import Calendario from './screens/calendario';
 import Inicio from './screens/inicio';
 import Login from './screens/login';
 import PantallaEjercicios from './screens/PantallaEjercicios';
+import Perfil from './screens/perfil';
 import Registro from './screens/registro';
 import Test from './screens/test';
 
@@ -31,6 +32,7 @@ export default function App() {
           <Stack.Screen name="Anxiosimetro" component={Anxiosimetro} />
           <Stack.Screen name="Calendario" component={Calendario} />
           <Stack.Screen name="PantallaEjercicios" component={PantallaEjercicios} />
+          <Stack.Screen name="Perfil" component={Perfil} />
           
 
         </Stack.Navigator>
