@@ -15,6 +15,7 @@ import PantallaEjercicios from './screens/PantallaEjercicios';
 import Perfil from './screens/perfil';
 import Registro from './screens/registro';
 import Test from './screens/test';
+import TestDiario from './screens/TestDiario';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +36,7 @@ export default function App() {
           <Stack.Screen name="PantallaEjercicios" component={PantallaEjercicios} />
           <Stack.Screen name="Perfil" component={Perfil} />
           <Stack.Screen name="Checking" component={CheckingScreen}/>
+          <Stack.Screen name="TestDiario" component={TestDiario}/>
 
         </Stack.Navigator>
       </NavigationContainer>
