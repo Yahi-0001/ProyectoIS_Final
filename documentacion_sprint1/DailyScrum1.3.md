@@ -14,7 +14,7 @@
 
 - **Itzia (PO/SM)**  
   - ¿Qué hice ayer(hoy pero tres horas antes)?: ayudar con la implementacion del calendario y el Ansiouslómetro 
-  - ¿Qué haré hoy?: 
+  - ¿Qué haré hoy?: ayudar con el diseño del calendario 
   - Impedimentos detectados: el diseñar el calendario como lo indica la historia de usuario 
 
 
