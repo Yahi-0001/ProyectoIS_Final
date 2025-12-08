@@ -167,4 +167,52 @@ para obtener apoyo inmediato cuando me siento mal.
 **Prioridad:** Baja  
 **Story Points:** 2  
 
+
+**Como usuario**,  
+quiero un acceso rápido a ejercicios o frases calmantes,  
+para obtener apoyo inmediato cuando me siento mal.  
+
+**Criterios de aceptación:**  
+- Botón visible en pantalla principal que abre recursos inmediatos (ejercicio corto, frase calmante).  
+- Itzia define el contenido y orden de los recursos.  
+- Funciona completamente sin internet y no guarda datos sensibles.  
+
+**Prioridad:** Baja  
+**Story Points:** 2  
+
+---
+### **HU-11 – Creación de base de datos local**  
+ 
+
+**Como usuario**,  
+quiero que la app tenga una base de datos local,  
+para que pueda guardar y consultar información sin depender de internet.
+
+**Criterios de aceptación:**  
+- La app crea automáticamente la base de datos al abrirse por primera vez.  
+- Funciona completamente sin conexión.  
+- Se almacena solo la información necesaria (sin datos sensibles).  
+- Permite guardar ejercicios, frases calmantes y registros necesarios para la app.  
+
+**Prioridad:** Alta  
+**Story Points:** 5
+
+---
+
+### **HU-12 – Realización de test emocional dentro de la app**
+
+**Como usuario**,  
+quiero poder realizar un test emocional dentro de la app,  
+para conocer mi estado y recibir orientación inmediata según mis respuestas.
+
+**Criterios de aceptación:**  
+- El usuario puede acceder al test desde un botón visible en la pantalla principal.  
+- El test contiene preguntas definidas por el equipo de contenido (Itzia).  
+- Al finalizar el test, la app muestra un resultado o recomendación.  
+- El test funciona sin conexión a internet.  
+- Las respuestas no deben almacenarse si contienen información sensible.  
+
+**Prioridad:** Media  
+**Story Points:** 3  
+
 ---
