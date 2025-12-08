@@ -3,16 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import {
-    Alert,
-    Animated,
-    Dimensions,
-    Image,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,9 +27,8 @@ export default function Anxiosimetro({ navigation, route }) {
   const [activeNav, setActiveNav] = useState(0);
   const [monitorActivo, setMonitorActivo] = useState(false);
   const [fraseIndex, setFraseIndex] = useState(0);
-  const [genero, setGenero] = useState('Femenino'); // valor por defecto
+  const [genero, setGenero] = useState('Femenino');
   const [nombreUsuario, setNombreUsuario] = useState('');
-
 
   const frases = [
     'Este proceso es valioso; cada paso cuenta.',
@@ -53,19 +50,42 @@ export default function Anxiosimetro({ navigation, route }) {
 
   const intervalRef = useRef(null);
 
+  //  BOTÓN de ayuda
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
-  inicializar();
+    // Heartbeat loop boton: crecer, contraer ligeramente, volver a normal
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1.12, duration: 300, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0.98, duration: 180, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1.0, duration: 220, useNativeDriver: true }),
+        Animated.delay(900),
+      ])
+    ).start();
+  }, []);
 
-  // NUEVO: recibir género pasado desde Registro
-  if (route?.params?.genero) {
-    setGenero(route.params.genero);
-  }
-
-  return () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+  const hacerPop = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.86, duration: 110, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1.12, duration: 160, useNativeDriver: true }),
+    ]).start(() => {
+      // vuelvo a la animación de heartbeat (la loop ya corre)
+      scaleAnim.setValue(1.0);
+    });
   };
-}, []);
 
+  useEffect(() => {
+    inicializar();
+
+    if (route?.params?.genero) {
+      setGenero(route.params.genero);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const inicializar = async () => {
     try {
@@ -73,14 +93,14 @@ export default function Anxiosimetro({ navigation, route }) {
 
       if (fechaInicio) {
         startMonitoring(fechaInicio);
-      } else if (route?.params?.start) {
+        return;
+      }
+
+      if (route?.params?.start) {
         const now = new Date().toISOString();
         await AsyncStorage.setItem('inicioAnsiedad', now);
         startMonitoring(now);
-
-        if (Platform.OS !== 'web') {
-          console.log('Notificaciones omitidas en Expo Go.');
-        }
+        return;
       }
     } catch (e) {
       console.error('Error inicializando monitoreo:', e);
@@ -100,23 +120,11 @@ export default function Anxiosimetro({ navigation, route }) {
 
     setMonitorActivo(true);
 
-    intervalRef.current = setInterval(
-      () => actualizarDesdeFecha(inicio),
-      1000
-    );
+    intervalRef.current = setInterval(() => {
+      actualizarDesdeFecha(inicio);
+    }, 1000);
 
     actualizarDesdeFecha(inicio);
-  };
-
-  const stopMonitoring = async ({ clearStorage = false } = {}) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-
-    setMonitorActivo(false);
-
-    if (clearStorage) {
-      await AsyncStorage.removeItem('inicioAnsiedad');
-      setTiempo({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
-    }
   };
 
   const actualizarDesdeFecha = async (fechaInicioISO) => {
@@ -140,87 +148,33 @@ export default function Anxiosimetro({ navigation, route }) {
   };
 
   const animarBarras = (t) => {
-  const secPct = (t.segundos % 60) / 59;
-  const minPct = (t.minutos % 60) / 59;
-  const horPct = (t.horas % 24) / 23;
-  const diaPct = Math.min((t.dias % 365) / 365, 1);
+    const secPct = (t.segundos % 60) / 59;
+    const minPct = (t.minutos % 60) / 59;
+    const horPct = (t.horas % 24) / 23;
+    const diaPct = Math.min((t.dias % 365) / 365, 1);
 
-  Animated.parallel([
-    Animated.timing(animSec, {
-      toValue: secPct,
-      duration: 300,
-      useNativeDriver: false,
-    }),
-    Animated.timing(animMin, {
-      toValue: minPct,
-      duration: 300,
-      useNativeDriver: false,
-    }),
-    Animated.timing(animHor, {
-      toValue: horPct,
-      duration: 300,
-      useNativeDriver: false,
-    }),
-    Animated.timing(animDia, {
-      toValue: diaPct,
-      duration: 300,
-      useNativeDriver: false,
-    }),
-  ]).start();
-};
-  const handleStopPress = () => {
-    Alert.alert(
-      'Detener Monitoreo',
-      '¿Deseas detener y reiniciar el contador ahora? (esto borrará el registro actual)',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Detener',
-          style: 'destructive',
-          onPress: async () => {
-            await stopMonitoring({ clearStorage: true });
-            animarBarras({
-              dias: 0,
-              horas: 0,
-              minutos: 0,
-              segundos: 0,
-            });
-          },
-        },
-      ]
-    );
+    Animated.parallel([
+      Animated.timing(animSec, { toValue: secPct, duration: 300, useNativeDriver: false }),
+      Animated.timing(animMin, { toValue: minPct, duration: 300, useNativeDriver: false }),
+      Animated.timing(animHor, { toValue: horPct, duration: 300, useNativeDriver: false }),
+      Animated.timing(animDia, { toValue: diaPct, duration: 300, useNativeDriver: false }),
+    ]).start();
   };
 
-  const secWidth = animSec.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
-  const minWidth = animMin.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
-  const horWidth = animHor.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
-  const diaWidth = animDia.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
-  const formatoTiempoTexto = (t) =>
-    `${t.dias} días, ${t.horas} horas, ${t.minutos} minutos y ${t.segundos} segundos`;
+  const secWidth = animSec.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const minWidth = animMin.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const horWidth = animHor.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const diaWidth = animDia.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
     <LinearGradient colors={['#f3e8ff', '#faf5ff']} style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
+        
+        {/* NAV BAR */}
         <View style={styles.navBar}>
           {[
             ['stats-chart-outline', 'Anxiósometro'],
-             ["calendar-outline", "Calendario"],
+            ['calendar-outline', 'Calendario'],
             ['heart-outline', 'Checking'],
             ['person-circle-outline', 'Perfil'],
           ].map(([icon, label], i) => (
@@ -229,25 +183,24 @@ export default function Anxiosimetro({ navigation, route }) {
               style={styles.navItem}
               onPress={() => {
                 setActiveNav(i);
-                
+
                 if (i === 0) navigation.navigate("Anxiosimetro");
                 if (i === 1) navigation.navigate("Calendario");
                 if (i === 2) navigation.navigate("Checking");
                 if (i === 3) navigation.navigate("Perfil");
-                }}
-              >
+              }}
+            >
               <Ionicons
                 name={icon}
                 size={26}
                 color={activeNav === i ? '#7C3AED' : '#9CA3AF'}
               />
-              {activeNav === i && (
-                <Text style={styles.navLabelActive}>{label}</Text>
-              )}
+              {activeNav === i && <Text style={styles.navLabelActive}>{label}</Text>}
             </TouchableOpacity>
           ))}
         </View>
 
+        {/* CONTENIDO */}
         <View style={styles.content}>
           <Text style={styles.title}>He estado sin ansiedad:</Text>
 
@@ -270,18 +223,14 @@ export default function Anxiosimetro({ navigation, route }) {
                 <Animated.View
                   style={[
                     styles.barFill,
-                      { 
-                        width: widths[i], 
-                        backgroundColor: color,
-                      },
-                    ]}
-                  >
-                    {/* Triángulo diagonal al final */}
+                    { width: widths[i], backgroundColor: color },
+                  ]}
+                >
                   <View style={[styles.triangle, { borderLeftColor: color }]} />
                 </Animated.View>
 
                 <Text style={styles.barText}>
-                  {values[i]} {['días','horas','minutos','segundos'][i]}
+                  {values[i]} {['días', 'horas', 'minutos', 'segundos'][i]}
                 </Text>
               </View>
             );
@@ -289,26 +238,25 @@ export default function Anxiosimetro({ navigation, route }) {
 
           <ScrollView
             horizontal
-            pagingEnabled  
+            pagingEnabled
             showsHorizontalScrollIndicator={false}
           >
             <View style={styles.whiteCard}>
               <Image
                 source={
                   genero === 'Femenino'
-                  ? require('../assets/mujer.png')
-                  : require('../assets/hombre.png')
+                    ? require('../assets/mujer.png')
+                    : require('../assets/hombre.png')
                 }
                 style={styles.image}
               />
 
               <View style={styles.saludoBox}>
                 <Text style={styles.saludoText}>
-                  Hola, {nombreUsuario}! No olvides que este proceso vale la pena, sigue así.{"\n"}
+                  Hola, {nombreUsuario}! No olvides que este proceso vale la pena.{"\n"}
                   {frases[fraseIndex]}
                 </Text>
               </View>
-
 
               <View style={styles.controlsRow}>
                 {!monitorActivo ? (
@@ -323,26 +271,31 @@ export default function Anxiosimetro({ navigation, route }) {
                       });
                     }}
                   >
-                    <Text style={styles.monitorText}>
-                      Iniciar Monitoreo
-                    </Text>
+                    <Text style={styles.monitorText}>Iniciar Monitoreo</Text>
                   </TouchableOpacity>
                 ) : (
-                  <>
-                    <TouchableOpacity
-                      style={styles.stopButton}
-                      onPress={handleStopPress}
-                    >
-                      <Text style={styles.stopText}>Detener</Text>
-                    </TouchableOpacity>
+                  <View style={{ alignItems: 'center', width: '100%' }}>
+                    <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
+                      {/* Yellow glow detrás (difuso) */}
+                      <View style={styles.yellowGlow} />
 
-                    <TouchableOpacity
-                      style={styles.pauseButton}
-                      onPress={() => stopMonitoring()}
-                    >
-                      <Text style={styles.pauseText}>Pausar</Text>
-                    </TouchableOpacity>
-                  </>
+                      <TouchableOpacity
+                        activeOpacity={0.85}
+                        style={styles.fabButton}
+                        onPress={async () => {
+                          hacerPop();
+                          const now = new Date().toISOString();
+                          await AsyncStorage.setItem('inicioAnsiedad', now);
+                          startMonitoring(now);
+                          navigation.navigate("PantallaEjercicios");
+                        }}
+                      >
+                        <Ionicons name="flash-outline" size={28} color="white" />
+                      </TouchableOpacity>
+                    </Animated.View>
+
+                    <Text style={styles.smallLabel}>Necesito Apoyo</Text>
+                  </View>
                 )}
               </View>
             </View>
@@ -352,6 +305,8 @@ export default function Anxiosimetro({ navigation, route }) {
     </LinearGradient>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -404,7 +359,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     height: '100%',
-    borderRadius: 0,
   },
 
   barText: {
@@ -415,6 +369,17 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.25)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+
+  triangle: {
+    position: 'absolute',
+    right: -9,
+    width: 0,
+    height: '100%',
+    borderBottomWidth: 55,
+    borderLeftWidth: 10,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
   },
 
   whiteCard: {
@@ -434,28 +399,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
 
-  message: {
-    padding: 12,
-    borderRadius: 10,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#333',
-    marginTop: 8,
+  saludoBox: {
+    backgroundColor: '#E9D5FF',
     width: '100%',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 10,
   },
 
-  smallInfo: {
-    marginTop: 10,
-    color: '#666',
-    fontSize: 13,
+  saludoText: {
+    color: '#5B21B6',
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 
   controlsRow: {
     flexDirection: 'row',
-    marginTop: 14,
+    marginTop: 16,
     width: '100%',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
   },
 
   monitorButton: {
@@ -470,57 +434,53 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  stopButton: {
-    backgroundColor: '#F87171',
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 30,
+ 
+  fabButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#7C3AED',
+    justifyContent: 'center',
+    alignItems: 'center',
+    // sombra blanca suave sobre el botón
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 8,
+    zIndex: 2,
   },
 
-  stopText: {
-    color: 'white',
-    fontWeight: '600',
-  },
 
-  pauseButton: {
-    backgroundColor: '#E5E7EB',
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 30,
-  },
-
-  pauseText: {
-    color: '#333',
-    fontWeight: '600',
-  },
-
-  triangle: {
+  yellowGlow: {
     position: 'absolute',
-    right: -9,          // se pega al final de la barra
-    width: 0,
-    height: '100%',
-    borderTopWidth: 0,   // la mitad del height de tu barra (aprox)
-    borderBottomWidth: 55,
-    borderLeftWidth: 10,  // ancho de la diagonal
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-},
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    backgroundColor: 'rgba(250,204,21,0.16)', // amarillo suave
+    shadowColor: '#edd26693',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 22,
+    elevation: 6,
+    zIndex: 1,
+    top: -15,
+    alignSelf: 'center',
+  },
 
-saludoBox: {
-  backgroundColor: '#E9D5FF', // morado clarito
-  width: '100%',
-  borderRadius: 12,
-  padding: 14,
-  marginTop: 10,
-},
-
-saludoText: {
-  color: '#5B21B6',
-  fontSize: 15,
-  fontWeight: '600',
-  textAlign: 'center',
-  lineHeight: 20,
-},
+  smallLabel: {
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4B2771', // morado oscuro
+    textTransform: 'lowercase',
+  },
 
 
+  btnLabel: {
+    marginTop: 8,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#444',
+  },
 });
