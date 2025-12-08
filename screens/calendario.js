@@ -97,8 +97,8 @@ export default function CalendarioEmocional() {
     backgroundGradientFrom: "#FFFFFF",
     backgroundGradientTo: "#FFFFFF",
     decimalPlaces: 0,
-    color: (opacity = 1) => 'rgba(124, 58, 237, ${opacity})',
-    labelColor: (opacity = 1) => 'rgba(0, 0, 0, ${opacity})',
+    color: (opacity = 1) => `rgba(124, 58, 237, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     propsForDots: {
       r: "5",
       strokeWidth: "2",
