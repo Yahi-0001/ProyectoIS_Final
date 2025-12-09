@@ -14,6 +14,7 @@ import Inicio from './screens/inicio';
 import Login from './screens/login';
 import PantallaEjercicios from './screens/PantallaEjercicios';
 import PantallaRapida from "./screens/PantallaRapida";
+import PantallaTest from "./screens/PantallaTest";
 import Perfil from './screens/perfil';
 import Registro from './screens/registro';
 import Test from './screens/test';
@@ -43,6 +44,9 @@ export default function App() {
           <Stack.Screen name="TestPersonalidad" component={TestPersonalidad} />
           <Stack.Screen name="PantallaRapida" component={PantallaRapida} />
           <Stack.Screen name="InfoAnsiedad" component={InfoAnsiedad} />
+          <Stack.Screen name="PantallaTest" component={PantallaTest} />
+
+
 
         </Stack.Navigator>
       </NavigationContainer>

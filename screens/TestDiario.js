@@ -1,15 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
   Animated,
+  Dimensions,
   Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -593,7 +593,7 @@ export default function TestDiario({ navigation }) {
               {selectedEmotion?.id === "ansiedad" && (
                 <TouchableOpacity
                   style={styles.breathingSuggestion}
-                  onPress={() => navigation.navigate("PantallaEjercicios")}
+                  onPress={() => navigation.navigate("PantallaTest")}
                   activeOpacity={0.85}
                 >
                   <Ionicons

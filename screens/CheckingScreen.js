@@ -145,12 +145,13 @@ export default function CheckingScreen({ navigation }) {
       );
 
       setHiddenMap(map);
+      // Niñas, aca agreguen para navegar a las pantallas, tqm
+      if (item.id === 2) {
+      // Escaneo corporal
+      navigation.navigate("Escaneo");
+    }
 
-      // Más adelante: navegar a pantalla de detalle
-      // navigation.navigate("PantallaEjercicios", {
-      //   ejercicioId: item.id,
-      //   titulo: item.titulo,
-      // });
+      
     } catch (e) {
       console.log("Error ocultando ejercicio:", e);
     }
@@ -325,7 +326,7 @@ const handleTestPersonalidad = async () => {
             >
               <Text style={styles.priorityButtonText}>
                 {testPersonalidadHecho
-                  ? "Test completado 💜"
+                  ? "Test completado"
                   : "Hacer test de personalidad"}
               </Text>
             </TouchableOpacity>
