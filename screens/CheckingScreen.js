@@ -146,9 +146,25 @@ export default function CheckingScreen({ navigation }) {
 
       setHiddenMap(map);
       // Niñas, aca agreguen para navegar a las pantallas, tqm
+      
+      if (item.id === 1) {
+    navigation.navigate("Respiracion");
+    return;
+    }
+      
       if (item.id === 2) {
       // Escaneo corporal
       navigation.navigate("Escaneo");
+    }
+
+    if (item.id === 3) {
+    navigation.navigate("Sentidos");
+    return;
+    }
+
+      if (item.id === 5) {
+      navigation.navigate("Autoabrazo");
+      return;
     }
 
       
