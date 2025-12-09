@@ -9,9 +9,11 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import Anxiosimetro from './screens/anxiosimetro';
 import Calendario from './screens/calendario';
 import CheckingScreen from './screens/CheckingScreen';
+import InfoAnsiedad from "./screens/InfoAnsiedad";
 import Inicio from './screens/inicio';
 import Login from './screens/login';
 import PantallaEjercicios from './screens/PantallaEjercicios';
+import PantallaRapida from "./screens/PantallaRapida";
 import Perfil from './screens/perfil';
 import Registro from './screens/registro';
 import Test from './screens/test';
@@ -39,6 +41,8 @@ export default function App() {
           <Stack.Screen name="Checking" component={CheckingScreen}/>
           <Stack.Screen name="TestDiario" component={TestDiario}/>
           <Stack.Screen name="TestPersonalidad" component={TestPersonalidad} />
+          <Stack.Screen name="PantallaRapida" component={PantallaRapida} />
+          <Stack.Screen name="InfoAnsiedad" component={InfoAnsiedad} />
 
         </Stack.Navigator>
       </NavigationContainer>

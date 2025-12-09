@@ -173,32 +173,34 @@ export default function CheckingScreen({ navigation }) {
     }
   };
 
+  
   // TEST PERSONALIDAD ------------------------------------------------
-  const handleTestPersonalidad = async () => {
-    try {
-      // Si ya está hecho -> no navegar otra vez
-      const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
-      if (testYaHecho === "SI" || testPersonalidadHecho) {
-        setTestPersonalidadHecho(true);
-        return;
-      }
+const handleTestPersonalidad = async () => {
+  try {
+    const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
 
-      // Si no está hecho, simplemente navega a la pantalla del test.
-      // En la pantalla "TestPersonalidad" es donde se hace:
-      // - Guardar testPersonalidadHecho = "SI"
-      // - Guardar testPersonalidadResultado con score + answers
-      navigation.navigate("TestPersonalidad");
-    } catch (error) {
-      console.log("Error revisando test personalidad:", error);
+    // Si ya está hecho → mostrar mensaje y bloquear
+    if (testYaHecho === "SI" || testPersonalidadHecho) {
+      setTestPersonalidadHecho(true);
+      alert("Ya completaste este test 💜");
+      return;
     }
-  };
+
+    // Primera vez: marcar como hecho y navegar al test
+    await AsyncStorage.setItem("testPersonalidadHecho", "SI");
+    setTestPersonalidadHecho(true);
+    navigation.navigate("TestPersonalidad");
+
+  } catch (error) {
+    console.log("Error revisando test personalidad:", error);
+  }
+};
+
   // --------------------------------------------------------------
 
 
   const handleLeerAnsiedad = () => {
-    // Más adelante:
-    // navigation.navigate("InfoAnsiedad");
-    console.log("Abrir pantalla de información sobre la ansiedad");
+    navigation.navigate("PantallaRapida");
   };
 
   const now = new Date();
