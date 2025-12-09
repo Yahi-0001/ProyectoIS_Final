@@ -24,6 +24,8 @@ const screenWidth = Dimensions.get("window").width;
 export default function CalendarioEmocional() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [dayFeelings, setDayFeelings] = useState({});
+  const [personalityDone, setPersonalityDone] = useState(false);          // 👈 NUEVO
+  const [personalityResult, setPersonalityResult] = useState(null);       // 👈 NUEVO
   const chartRef = useRef();
 
   const emotions = [
@@ -45,6 +47,23 @@ export default function CalendarioEmocional() {
       try {
         const s = await AsyncStorage.getItem("dayFeelings_v1");
         if (s) setDayFeelings(JSON.parse(s));
+
+        // 👇 leer si el test de personalidad ya se hizo
+        const done = await AsyncStorage.getItem("testPersonalidadHecho");
+        if (done === "SI") setPersonalityDone(true);
+
+        // 👇 leer resumen del resultado del test
+        const resJson = await AsyncStorage.getItem(
+          "testPersonalidadResultado_v1"
+        );
+        if (resJson) {
+          try {
+            const parsed = JSON.parse(resJson);
+            setPersonalityResult(parsed);
+          } catch (e) {
+            console.warn("Error parseando resultado personalidad:", e);
+          }
+        }
       } catch (e) {
         console.warn("Error loading feelings:", e);
       }
@@ -53,8 +72,8 @@ export default function CalendarioEmocional() {
 
   // Save on change
   useEffect(() => {
-    AsyncStorage.setItem("dayFeelings_v1", JSON.stringify(dayFeelings)).catch((e) =>
-      console.warn("Error saving feelings:", e)
+    AsyncStorage.setItem("dayFeelings_v1", JSON.stringify(dayFeelings)).catch(
+      (e) => console.warn("Error saving feelings:", e)
     );
   }, [dayFeelings]);
 
@@ -67,7 +86,9 @@ export default function CalendarioEmocional() {
 
   // Marked dates
   const markedDates = {
-    ...(selectedDay ? { [selectedDay]: { selected: true, selectedColor: "#7C3AED" } } : {}),
+    ...(selectedDay
+      ? { [selectedDay]: { selected: true, selectedColor: "#7C3AED" } }
+      : {}),
     ...Object.fromEntries(
       Object.entries(dayFeelings).map(([d, f]) => [
         d,
@@ -75,7 +96,6 @@ export default function CalendarioEmocional() {
       ])
     ),
   };
-  
 
   // Chart data
   const sortedDates = Object.keys(dayFeelings).sort();
@@ -89,7 +109,9 @@ export default function CalendarioEmocional() {
 
   const weeklyAvg =
     chartValues.length > 0
-      ? (chartValues.reduce((a, b) => a + b, 0) / chartValues.length).toFixed(2)
+      ? (chartValues.reduce((a, b) => a + b, 0) / chartValues.length).toFixed(
+          2
+        )
       : "N/A";
 
   const chartConfig = {
@@ -108,36 +130,36 @@ export default function CalendarioEmocional() {
 
   // PDF Export
   const exportToPDF = async () => {
-  try {
-    if (sortedDates.length === 0) {
-      return Alert.alert(
-        "No hay datos",
-        "Registra al menos una emoción para exportar PDF."
-      );
-    }
+    try {
+      if (sortedDates.length === 0) {
+        return Alert.alert(
+          "No hay datos",
+          "Registra al menos una emoción para exportar PDF."
+        );
+      }
 
-    // Capturar imagen temporal
-    const uri = await chartRef.current.capture();
+      const uri = await chartRef.current.capture();
 
-    // Convertir a base64 usando API LEGACY (compatible Expo Go)
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: "base64",
-    });
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: "base64",
+      });
 
-    // Tabla HTML
-    const rowsHtml = sortedDates
-      .map((d) => {
-        const f = dayFeelings[d];
-        return `<tr>
+      const rowsHtml = sortedDates
+        .map((d) => {
+          const f = dayFeelings[d];
+          return `<tr>
           <td style="padding:8px;border:1px solid #ddd;">${d}</td>
-          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(f.label)}</td>
-          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${f.value}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(
+            f.label
+          )}</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${
+            f.value
+          }</td>
         </tr>`;
-      })
-      .join("");
+        })
+        .join("");
 
-    // HTML PDF
-    const html = `
+      const html = `
     <html>
       <head><meta charset="utf-8"/></head>
       <body style="font-family: Arial; padding:20px; color:#222;">
@@ -170,18 +192,14 @@ export default function CalendarioEmocional() {
     </html>
     `;
 
-    // Crear PDF
-    const { uri: pdfUri } = await Print.printToFileAsync({ html });
+      const { uri: pdfUri } = await Print.printToFileAsync({ html });
 
-    // Compartir
-    await Sharing.shareAsync(pdfUri);
-
-  } catch (e) {
-    console.error("PDF Error:", e);
-    Alert.alert("Error al generar PDF", String(e));
-  }
-};
-
+      await Sharing.shareAsync(pdfUri);
+    } catch (e) {
+      console.error("PDF Error:", e);
+      Alert.alert("Error al generar PDF", String(e));
+    }
+  };
 
   function escapeHtml(text) {
     return String(text)
@@ -209,12 +227,45 @@ export default function CalendarioEmocional() {
           }}
         />
 
+        {/* 🌸 AQUÍ VA AHORA EL RESULTADO DEL TEST */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tu test de personalidad</Text>
+
+          {!personalityDone ? (
+            <View style={styles.personalityReminderBox}>
+              <Text style={styles.personalityReminderText}>
+                No olvides realizar el test de personalidad. Te ayudará a
+                entender mejor cómo eres emocionalmente 💕
+              </Text>
+              {/* OJO: aquí ya no ponemos onPress si tú quieres que solo se haga desde Checking.
+                  Si quieres que también navegue, puedes agregar el botón más adelante. */}
+            </View>
+          ) : (
+            <View style={styles.personalityResultBox}>
+              <Text style={styles.personalityResultLabel}>Tu resultado:</Text>
+              <Text style={styles.personalityResultTitle}>
+                {personalityResult?.title || "Test completado"}
+              </Text>
+              {personalityResult?.score != null && (
+                <Text style={styles.personalityResultScore}>
+                  Puntaje: {personalityResult.score} / 75
+                </Text>
+              )}
+              <Text style={styles.personalityResultNote}>
+                Este test solo se responde una vez para cuidar tu proceso
+                emocional 💜
+              </Text>
+            </View>
+          )}
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Selecciona una emoción</Text>
 
           <View style={styles.emotionsGrid}>
             {emotions.map((e) => {
-              const chosen = selectedDay && dayFeelings[selectedDay]?.label === e.label;
+              const chosen =
+                selectedDay && dayFeelings[selectedDay]?.label === e.label;
               return (
                 <TouchableOpacity
                   key={e.label}
@@ -225,7 +276,12 @@ export default function CalendarioEmocional() {
                   ]}
                   onPress={() => saveFeeling(selectedDay, e)}
                 >
-                  <Text style={[styles.emotionText, chosen && { color: "#fff", fontWeight: "700" }]}>
+                  <Text
+                    style={[
+                      styles.emotionText,
+                      chosen && { color: "#fff", fontWeight: "700" },
+                    ]}
+                  >
                     {e.label}
                   </Text>
                 </TouchableOpacity>
@@ -238,7 +294,9 @@ export default function CalendarioEmocional() {
           <Text style={styles.sectionTitle}>Semana / Histórico</Text>
 
           {sortedDates.length === 0 ? (
-            <Text style={styles.emptyText}>Aún no hay emociones registradas.</Text>
+            <Text style={styles.emptyText}>
+              Aún no hay emociones registradas.
+            </Text>
           ) : (
             <>
               <ViewShot
@@ -246,7 +304,7 @@ export default function CalendarioEmocional() {
                 options={{
                   format: "png",
                   quality: 1,
-                  result: "tmpfile", // 🔥 FIX PARA EXPO GO
+                  result: "tmpfile",
                 }}
               >
                 <LineChart
@@ -278,9 +336,20 @@ export default function CalendarioEmocional() {
 /* =============== STYLES =============== */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF", padding: 16 },
-  title: { fontSize: 22, fontWeight: "700", color: "#222", marginVertical: 8, textAlign: "center" },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#222",
+    marginVertical: 8,
+    textAlign: "center",
+  },
   section: { marginTop: 18 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#333", marginBottom: 10 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 10,
+  },
   emotionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   emotionBtn: {
     paddingVertical: 10,
@@ -292,7 +361,12 @@ const styles = StyleSheet.create({
   },
   emotionText: { color: "#333", fontSize: 14 },
   emptyText: { color: "#666", fontStyle: "italic" },
-  avgText: { marginTop: 10, fontSize: 18, fontWeight: "700", color: "#7C3AED" },
+  avgText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#7C3AED",
+  },
   actions: { marginTop: 22, alignItems: "center" },
   pdfBtn: {
     backgroundColor: "#7C3AED",
@@ -302,4 +376,47 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   pdfBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+
+  // 🌸 estilos test de personalidad
+  personalityReminderBox: {
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: "#FFF5FB",
+    borderWidth: 1,
+    borderColor: "#F8B4D9",
+  },
+  personalityReminderText: {
+    fontSize: 14,
+    color: "#8A4A63",
+  },
+  personalityResultBox: {
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: "#FDF2FF",
+    borderWidth: 1,
+    borderColor: "#E4B4F5",
+  },
+  personalityResultLabel: {
+    fontSize: 12,
+    color: "#7E6A8C",
+    marginBottom: 4,
+    fontWeight: "700",
+  },
+  personalityResultTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#4B275F",
+    marginBottom: 4,
+  },
+  personalityResultScore: {
+    fontSize: 13,
+    color: "#6B21A8",
+    marginBottom: 6,
+  },
+  personalityResultNote: {
+    fontSize: 12,
+    color: "#7E6A8C",
+  },
 });
