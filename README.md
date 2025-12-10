@@ -216,3 +216,21 @@ para conocer mi estado y recibir orientación inmediata según mis respuestas.
 **Story Points:** 3  
 
 ---
+
+### **HU-13 – Actualización general de la app para mejorar la experiencia del usuario**
+
+**Como usuario**,  
+quiero que la aplicación se actualice con nuevas mejoras y correcciones,  
+para tener una experiencia más fluida, estable y útil dentro de la app.
+
+
+### **Criterios de aceptación**
+- La app debe incluir correcciones de errores reportados en versiones anteriores.  
+- Las pantallas deben cargar más rápido tras la actualización.  
+- La actualización no elimina información guardada previamente por el usuario.   
+
+
+**Prioridad:** Alta  
+**Story Points:** 3
+
+---
