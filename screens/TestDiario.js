@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -245,6 +246,59 @@ const EMOCIONES = [
   },
 ];
 
+// 👉 Mapeo del mood del test a la emoción del CalendarioEmocional
+function mapMoodToCalendarEmotion(moodId) {
+  switch (moodId) {
+    case "extasis":
+      return { label: "Éxtasis 🤩", color: "#FFB74D", value: 6 };
+    case "muy_feliz":
+      return { label: "Muy Feliz 😀", color: "#FFD54F", value: 5 };
+    case "feliz":
+    case "emocion":
+      return { label: "Feliz 🙂", color: "#AED581", value: 4 };
+    case "neutral":
+      return { label: "Neutral 😐", color: "#90A4AE", value: 3 };
+    case "calma":
+      return { label: "Calmado 😌", color: "#81C784", value: 4 };
+    case "triste":
+      return { label: "Triste 🙁", color: "#64B5F6", value: 2 };
+    case "muy_triste":
+      return { label: "Muy Triste 😢", color: "#42A5F5", value: 1 };
+    case "ansiedad":
+      return { label: "Ansioso 😰", color: "#BA68C8", value: 2 };
+    case "estres":
+      return { label: "Estresado 😓", color: "#E57373", value: 1 };
+    default:
+      return { label: "Sin registro", color: "#9CA3AF", value: 0 };
+  }
+}
+
+// 👉 Guarda la emoción del día en AsyncStorage para el calendario
+async function guardarEmocionEnCalendario(moodId) {
+  if (!moodId) return;
+
+  const emotion = mapMoodToCalendarEmotion(moodId);
+
+  const today = new Date();
+  const dateKey = today.toISOString().slice(0, 10); // YYYY-MM-DD
+
+  try {
+    const existing = await AsyncStorage.getItem("dayFeelings_v1");
+    let parsed = {};
+    if (existing) {
+      parsed = JSON.parse(existing);
+    }
+
+    parsed[dateKey] = emotion;
+
+    await AsyncStorage.setItem("dayFeelings_v1", JSON.stringify(parsed));
+
+    console.log("Emoción guardada para", dateKey, emotion);
+  } catch (e) {
+    console.warn("Error guardando emoción en calendario:", e);
+  }
+}
+
 function MoodItem({ emotion, selected, onSelect }) {
   const animValue = useRef(new Animated.Value(0)).current;
 
@@ -472,12 +526,12 @@ export default function TestDiario({ navigation }) {
         useNativeDriver: true,
       }).start(() => {
         setShowSuccess(false);
-        navigation.navigate("PantallaResultado", payload);
+        navigation.navigate("Anxiosimetro", payload);
       });
     }, 1100);
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const { scoresByQuestion, totalScore } = calcularPuntajes();
 
     const payload = {
@@ -488,6 +542,13 @@ export default function TestDiario({ navigation }) {
     };
 
     console.log("RESULTADO COMPLETO TEST:", payload);
+
+    // 💾 Guardar emoción del día para el calendario
+    try {
+      await guardarEmocionEnCalendario(selectedMood);
+    } catch (e) {
+      console.warn("Error al guardar emoción del día:", e);
+    }
 
     mostrarCartaExitoYNavegar(payload);
   };
@@ -1033,4 +1094,3 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
 });
-
