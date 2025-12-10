@@ -50,8 +50,8 @@ const imagenInfoAnsiedad = require("../assets/ansiedad.jpg");
 
 const imagenesEjercicios = {
   1: require("../assets/respracion.gif"), // Respiración 4-7-8
-  2: require("../assets/corporal.png"), // Escaneo corporal
-  3: require("../assets/sentidos.jpg"), // Anclaje con los sentidos
+  2: require("../assets/corporal.png"),   // Escaneo corporal
+  3: require("../assets/sentidos.jpg"),   // Anclaje con los sentidos
   5: require("../assets/autoabrazo.jpg"), // Autoabrazo consciente
 };
 
@@ -62,6 +62,7 @@ export default function CheckingScreen({ navigation }) {
   const [hiddenMap, setHiddenMap] = useState({}); // { [id]: hiddenUntilISO }
   const [testRealizadoHoy, setTestRealizadoHoy] = useState(false);
   const [testPersonalidadHecho, setTestPersonalidadHecho] = useState(false);
+  const [resultadoPersonalidad, setResultadoPersonalidad] = useState(null); // 👈 NUEVO
 
   // NUEVO: controla si hoy ya se puede hacer el test (después de las 11:20)
   const [puedeHacerTestHoy, setPuedeHacerTestHoy] = useState(false);
@@ -108,8 +109,7 @@ export default function CheckingScreen({ navigation }) {
       // ¿ya pasaron las 11:20 am?
       const hora = ahora.getHours(); // 0-23
       const minutos = ahora.getMinutes(); // 0-59
-      const yaEs1120 =
-        hora > 11 || (hora === 11 && minutos >= 20);
+      const yaEs1120 = hora > 11 || (hora === 11 && minutos >= 20);
 
       // puedes hacer el test SOLO si:
       // - todavía no lo hiciste hoy
@@ -120,6 +120,14 @@ export default function CheckingScreen({ navigation }) {
       const storedPers = await AsyncStorage.getItem("testPersonalidadHecho");
       if (storedPers === "SI") {
         setTestPersonalidadHecho(true);
+      }
+
+      // Leer resultado del test de personalidad (si existe)
+      const storedResultado = await AsyncStorage.getItem(
+        "testPersonalidadResultado_v1"
+      );
+      if (storedResultado) {
+        setResultadoPersonalidad(JSON.parse(storedResultado));
       }
     } catch (e) {
       console.log("Cargando nuestro Checking:", e);
@@ -145,12 +153,26 @@ export default function CheckingScreen({ navigation }) {
       );
 
       setHiddenMap(map);
+      // Niñas, aca agreguen para navegar a las pantallas, tqm
 
-      // Más adelante: navegar a pantalla de detalle
-      // navigation.navigate("PantallaEjercicios", {
-      //   ejercicioId: item.id,
-      //   titulo: item.titulo,
-      // });
+      if (item.id === 1) {
+        navigation.navigate("Respiracion");
+        return;
+      }
+
+      if (item.id === 2) {
+        navigation.navigate("Escaneo");
+      }
+
+      if (item.id === 3) {
+        navigation.navigate("Sentidos");
+        return;
+      }
+
+      if (item.id === 5) {
+        navigation.navigate("Autoabrazo");
+        return;
+      }
     } catch (e) {
       console.log("Error ocultando ejercicio:", e);
     }
@@ -173,31 +195,25 @@ export default function CheckingScreen({ navigation }) {
     }
   };
 
-  
   // TEST PERSONALIDAD ------------------------------------------------
-const handleTestPersonalidad = async () => {
+  const handleTestPersonalidad = async () => {
   try {
     const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
 
-    // Si ya está hecho → mostrar mensaje y bloquear
     if (testYaHecho === "SI" || testPersonalidadHecho) {
       setTestPersonalidadHecho(true);
       alert("Ya completaste este test 💜");
       return;
     }
 
-    // Primera vez: marcar como hecho y navegar al test
-    await AsyncStorage.setItem("testPersonalidadHecho", "SI");
-    setTestPersonalidadHecho(true);
+    // Primera vez: solo navegamos. El guardado se hará en el test.
     navigation.navigate("TestPersonalidad");
-
   } catch (error) {
     console.log("Error revisando test personalidad:", error);
   }
 };
 
   // --------------------------------------------------------------
-
 
   const handleLeerAnsiedad = () => {
     navigation.navigate("PantallaRapida");
@@ -210,8 +226,7 @@ const handleTestPersonalidad = async () => {
     return new Date(hiddenUntil) <= now;
   });
 
-  const canGoTestDiario =
-    !testRealizadoHoy && puedeHacerTestHoy;
+  const canGoTestDiario = !testRealizadoHoy && puedeHacerTestHoy;
 
   return (
     <View style={styles.container}>
@@ -297,39 +312,38 @@ const handleTestPersonalidad = async () => {
           </View>
 
           {/* SEGUNDO TEST: PERSONALIDAD */}
-          <View style={styles.priorityCard}>
-            {/* Imagen test personalidad */}
-            <View style={styles.cardImageBox}>
-              <Image
-                source={imagenTestPersonalidad}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
-            </View>
+<View style={styles.priorityCard}>
+  <View style={styles.cardImageBox}>
+    <Image
+      source={imagenTestPersonalidad}
+      style={styles.cardImage}
+      resizeMode="cover"
+    />
+  </View>
 
-            <Text style={styles.priorityTitle}>
-              Descubre tu personalidad
-            </Text>
-            <Text style={styles.priorityText}>
-              Un test para descubrir tu personalidad y explorar cómo actúa la
-              ansiedad en ti.
-            </Text>
+  <Text style={styles.priorityTitle}>Descubre tu personalidad</Text>
+  <Text style={styles.priorityText}>
+    Un test para descubrir tu personalidad y explorar cómo actúa la ansiedad en ti.
+  </Text>
 
-            <TouchableOpacity
-              style={[
-                styles.priorityButton,
-                testPersonalidadHecho && styles.priorityButtonDone,
-              ]}
-              onPress={handleTestPersonalidad}
-              activeOpacity={testPersonalidadHecho ? 1 : 0.9}
-            >
-              <Text style={styles.priorityButtonText}>
-                {testPersonalidadHecho
-                  ? "Test completado 💜"
-                  : "Hacer test de personalidad"}
-              </Text>
-            </TouchableOpacity>
-          </View>
+  <TouchableOpacity
+    style={[
+      styles.priorityButton,
+      testPersonalidadHecho && styles.priorityButtonDone,
+    ]}
+    onPress={handleTestPersonalidad}
+    activeOpacity={testPersonalidadHecho ? 1 : 0.9}
+  >
+    <Text style={styles.priorityButtonText}>
+      {testPersonalidadHecho
+        ? "Test completado"
+        : "Hacer test de personalidad"}
+    </Text>
+  </TouchableOpacity>
+</View>
+
+
+                  
 
           {/* INFO: LEER SOBRE LA ANSIEDAD */}
           <View style={styles.priorityCard}>
@@ -478,6 +492,32 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 14,
+  },
+
+  // Resultado test personalidad
+  resultadoBox: {
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: "#F3E8FF",
+    borderWidth: 1,
+    borderColor: "#D8B4FE",
+  },
+  resultadoLabel: {
+    fontSize: 12,
+    color: "#6B21A8",
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  resultadoTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#4C1D95",
+    marginBottom: 4,
+  },
+  resultadoScore: {
+    fontSize: 12,
+    color: "#6B21A8",
   },
 
   titulo: {

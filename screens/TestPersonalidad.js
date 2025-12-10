@@ -1,15 +1,16 @@
 // App.js
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
 import {
   SafeAreaView,
-  View,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
+  View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // 👈 NUEVO
 
 // ========================= PREGUNTAS =========================
 const QUESTIONS = [
@@ -278,19 +279,39 @@ export default function App() {
   const score = Object.values(answers).reduce((acc, v) => acc + (v || 0), 0);
   const resultInfo = getResultText(score);
 
-  const handleSave = () => {
-    if (savedResult) return;
-    const dataToSave = {
-      score,
-      answers,
-      createdAt: new Date().toISOString(),
-    };
-    setSavedResult(dataToSave);
-    console.log("Resultado guardado:", dataToSave);
+  const handleSave = async () => {
+  if (savedResult) return;
+
+  const dataToSave = {
+    score,
+    answers,
+    createdAt: new Date().toISOString(),
+    title: resultInfo.title, // usamos el título del perfil
   };
 
+  try {
+    // 1) marcar que el test YA se hizo
+    await AsyncStorage.setItem("testPersonalidadHecho", "SI");
+
+    // 2) guardar resumen de resultado para Calendario
+    await AsyncStorage.setItem(
+      "testPersonalidadResultado_v1",
+      JSON.stringify({
+        score: dataToSave.score,
+        title: dataToSave.title,
+      })
+    );
+
+    setSavedResult(dataToSave);
+    console.log("Resultado guardado:", dataToSave);
+  } catch (e) {
+    console.log("Error guardando test personalidad:", e);
+  }
+};
+
+
   const handleGoBackToAnxiosimetro = () => {
-    navigation.navigate("Anxiosimetro"); // 👈 vuelve a la pantalla Checking
+    navigation.navigate("Anxiosimetro"); 
   };
 
   // ========================= PANTALLA RESULTADO =========================
