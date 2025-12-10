@@ -1,216 +1,702 @@
 import { useState } from "react";
 import {
   Dimensions,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
-import { Entypo, FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import {
+  Entypo,
+  FontAwesome,
+  Ionicons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function ProfileScreen({ navigation }) {
-
   const [name, setName] = useState("Regina Gámez");
   const [email, setEmail] = useState("marir8046@gmail.com");
   const [phone, setPhone] = useState("27134578941");
   const [language, setLanguage] = useState("es");
   const [activeNav, setActiveNav] = useState(3); // PERFIL activado
 
+  // cositas interactivas del perfil
+  const [mood, setMood] = useState("Tranquila 😌");
+  const [goal, setGoal] = useState("3 chequeos al día");
+  const [notificationsOn, setNotificationsOn] = useState(true);
+
   return (
-    <LinearGradient colors={["#faf5ff", "#f3e8ff"]} style={{ flex: 1 }}>
-
-      {/*NAV BAR*/}
-      <View style={styles.navBar}>
-        {[
-          ["stats-chart-outline", "Anxiosimetro", "Anxiosimetro"],
-          ["calendar-outline", "Calendario", "Calendario"],
-          ["heart-outline", "Checking", "Checking"],
-          ["person-circle-outline", "Perfil", "Perfil"],
-        ].map(([icon, label, screen], i) => (
-          <TouchableOpacity
-            key={i}
-            style={styles.navItem}
-            onPress={() => {
-              setActiveNav(i);
-              navigation.navigate(screen);
-            }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f3e8ff" }}>
+      <LinearGradient colors={["#faf5ff", "#f3e8ff"]} style={{ flex: 1 }}>
+        <View style={styles.screen}>
+          {/* CONTENIDO */}
+          <ScrollView
+            style={styles.container}
+            contentContainerStyle={{ paddingBottom: 10 }}
+            showsVerticalScrollIndicator={false}
           >
-            <Ionicons
-              name={icon}
-              size={26}
-              color={activeNav === i ? "#7C3AED" : "#9CA3AF"}
-            />
-            {activeNav === i && (
-              <Text style={styles.navLabelActive}>{label}</Text>
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
+            {/* TARJETA DE BIENVENIDA CON DEGRADADO */}
+            <LinearGradient
+              colors={["#ffffff", "#f5f3ff"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.headerCard}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.helloText}>Hola,</Text>
+                <Text style={styles.nameBig}>{name}</Text>
 
-      {/*CONTENIDO */}
-      <ScrollView style={styles.container}>
+                <LinearGradient
+                  colors={["#ede9fe", "#e0f2fe"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.badge}
+                >
+                  <Ionicons
+                    name="sparkles-outline"
+                    size={16}
+                    color="#7C3AED"
+                  />
+                  <Text style={styles.badgeText}>Tu espacio seguro 💜</Text>
+                </LinearGradient>
 
-        {/* FOTO */}
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatarCircle}>
-            <FontAwesome name="user" size={60} color="#555" />
+                <Text style={styles.smallText}>
+                  Hoy te sientes: <Text style={styles.moodText}>{mood}</Text>
+                </Text>
+              </View>
+
+              <View style={styles.avatarCircle}>
+                <FontAwesome name="user" size={50} color="#555" />
+              </View>
+            </LinearGradient>
+
+            {/* ESTADÍSTICAS RÁPIDAS CON GRADIENT Y COLORES PASTELES */}
+            <View style={styles.statsRow}>
+              <LinearGradient
+                colors={["#fef3c7", "#ffe4e6"]} // amarillo suave -> rosita
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.statCard}
+              >
+                <Text style={styles.statLabel}>Racha de calma 🔥</Text>
+                <Text style={styles.statNumber}>5 días</Text>
+                <Text style={styles.statHint}>Sigue así, lo haces genial</Text>
+              </LinearGradient>
+
+              <LinearGradient
+                colors={["#dbeafe", "#ede9fe"]} // azulito -> lila
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.statCard}
+              >
+                <Text style={styles.statLabel}>Sesiones 🎧</Text>
+                <Text style={styles.statNumber}>18</Text>
+                <Text style={styles.statHint}>
+                  Tu mente se está cuidando
+                </Text>
+              </LinearGradient>
+            </View>
+
+            {/* ESTADO DE HOY */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Tu estado de hoy ✨</Text>
+              <Text style={styles.sectionSubtitle}>
+                Toca una opción para actualizar cómo te sientes.
+              </Text>
+
+              <View style={styles.chipsRow}>
+                {["Tranquila 😌", "Nerviosa 😰", "Cansada 🥱"].map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[
+                      styles.chip,
+                      mood === item && styles.chipActive,
+                    ]}
+                    onPress={() => setMood(item)}
+                  >
+                    <Text
+                      style={[
+                        styles.chipText,
+                        mood === item && styles.chipTextActive,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* DATOS PERSONALES */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Datos personales 👤</Text>
+
+              {/* NOMBRE */}
+              <View style={styles.rowBetween}>
+                <Text style={styles.labelInline}>Nombre</Text>
+                <TouchableOpacity>
+                  <MaterialIcons name="edit" size={18} color="#7C3AED" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
+
+              {/* CORREO */}
+              <View style={styles.rowBetween}>
+                <Text style={styles.labelInline}>Correo</Text>
+                <MaterialIcons name="email" size={16} color="#7C3AED" />
+              </View>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                />
+                <MaterialIcons name="edit" size={20} color="#7C3AED" />
+              </View>
+
+              {/* TELÉFONO */}
+              <View style={styles.rowBetween}>
+                <Text style={styles.labelInline}>Número celular</Text>
+                <MaterialIcons name="phone-android" size={16} color="#7C3AED" />
+              </View>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                />
+                <MaterialIcons name="edit" size={20} color="#7C3AED" />
+              </View>
+
+              {/* IDIOMA */}
+              <Text style={styles.labelInline}>Idioma 🌐</Text>
+              <View style={styles.dropdown}>
+                <Picker selectedValue={language} onValueChange={setLanguage}>
+                  <Picker.Item label="Español" value="es" />
+                  <Picker.Item label="Inglés" value="en" />
+                </Picker>
+              </View>
+            </View>
+
+            {/* PREFERENCIAS & METAS - CARD CON DEGRADADO Y MÁS COLOR */}
+            <LinearGradient
+              colors={["#fdf2ff", "#e0f2fe"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.cardColored}
+            >
+              <Text style={styles.sectionTitle}>
+                Preferencias & metas 🎯
+              </Text>
+
+              <Text style={styles.labelInline}>Meta diaria</Text>
+              <View style={styles.chipsRow}>
+                {[
+                  "3 chequeos al día",
+                  "5 chequeos al día",
+                  "Solo cuando lo necesite",
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[
+                      styles.chipSmall,
+                      goal === item && styles.chipActiveColored,
+                    ]}
+                    onPress={() => setGoal(item)}
+                  >
+                    <Text
+                      style={[
+                        styles.chipTextSmall,
+                        goal === item && styles.chipTextActive,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={[styles.preferenceRow, { marginTop: 20 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.preferenceTitle}>
+                    Notificaciones 📲
+                  </Text>
+                  <Text style={styles.preferenceSubtitle}>
+                    Recordatorios suaves para cuidar tu ansiedad.
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.toggle,
+                    notificationsOn && styles.toggleOn,
+                  ]}
+                  onPress={() => setNotificationsOn(!notificationsOn)}
+                >
+                  <View
+                    style={[
+                      styles.toggleCircle,
+                      notificationsOn && styles.toggleCircleOn,
+                    ]}
+                  />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+
+            {/* MÁS OPCIONES - CARD CON DEGRADADO Y ICONOS EN BURBUJA */}
+            <LinearGradient
+              colors={["#eef2ff", "#fef9c3"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.cardColored}
+            >
+              <Text style={styles.sectionTitle}>Más opciones ⚙️</Text>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => navigation.navigate("Configuracion")}
+              >
+                <View style={[styles.iconBubble, { backgroundColor: "#e0f2fe" }]}>
+                  <Ionicons
+                    name="settings-sharp"
+                    size={18}
+                    color="#1D4ED8"
+                  />
+                </View>
+                <Text style={styles.menuText}>Configuración</Text>
+                <Entypo
+                  name="chevron-right"
+                  size={20}
+                  color="#6B7280"
+                  style={{ marginLeft: "auto" }}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => navigation.navigate("Ayuda")}
+              >
+                <View style={[styles.iconBubble, { backgroundColor: "#fef3c7" }]}>
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={18}
+                    color="#B45309"
+                  />
+                </View>
+                <Text style={styles.menuText}>Centro de ayuda</Text>
+                <Entypo
+                  name="chevron-right"
+                  size={20}
+                  color="#6B7280"
+                  style={{ marginLeft: "auto" }}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => navigation.navigate("EliminarCuenta")}
+              >
+                <View style={[styles.iconBubble, { backgroundColor: "#fee2e2" }]}>
+                  <Ionicons
+                    name="warning-outline"
+                    size={18}
+                    color="#DC2626"
+                  />
+                </View>
+                <Text style={[styles.menuText, { color: "#DC2626" }]}>
+                  Eliminar cuenta
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.menuItem, { marginTop: 6 }]}
+                onPress={() => navigation.navigate("Login")}
+              >
+                <View style={[styles.iconBubble, { backgroundColor: "#e5e7eb" }]}>
+                  <Ionicons
+                    name="log-out-outline"
+                    size={18}
+                    color="#111827"
+                  />
+                </View>
+                <Text style={[styles.menuText, { color: "#111827" }]}>
+                  Cerrar sesión
+                </Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </ScrollView>
+
+          {/* NAV BAR ABAJO */}
+          <View style={styles.navBarContainer}>
+            <View style={styles.navBar}>
+              {[
+                ["stats-chart-outline", "Anxiosímetro", "Anxiosimetro"],
+                ["calendar-outline", "Calendario", "Calendario"],
+                ["heart-outline", "Checking", "Checking"],
+                ["person-circle-outline", "Perfil", "Perfil"],
+              ].map(([icon, label, screen], index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.navItem}
+                  onPress={() => {
+                    setActiveNav(index);
+                    navigation.navigate(screen);
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.navIconWrapper,
+                      activeNav === index && styles.navIconActive,
+                    ]}
+                  >
+                    <Ionicons
+                      name={icon}
+                      size={24}
+                      color={activeNav === index ? "#7C3AED" : "#9CA3AF"}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.navLabel,
+                      activeNav === index && styles.navLabelActive,
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.name}>{name}</Text>
-            <TouchableOpacity>
-              <MaterialIcons name="edit" size={18} color="black" style={{ marginLeft: 6 }} />
-            </TouchableOpacity>
-          </View>
         </View>
-
-        {/* CORREO */}
-        <Text style={styles.label}>Correo:</Text>
-        <View style={styles.inputContainer}>
-          <TextInput style={styles.input} value={email} onChangeText={setEmail} />
-          <MaterialIcons name="edit" size={20} color="black" />
-        </View>
-
-        {/* TELÉFONO */}
-        <Text style={styles.label}>Número celular:</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-          />
-          <MaterialIcons name="edit" size={20} color="black" />
-        </View>
-
-        {/* IDIOMA */}
-        <Text style={styles.label}>Idioma</Text>
-        <View style={styles.dropdown}>
-          <Picker selectedValue={language} onValueChange={setLanguage}>
-            <Picker.Item label="Español" value="es" />
-            <Picker.Item label="Inglés" value="en" />
-          </Picker>
-        </View>
-
-        {/* MENÚ */}
-        <View style={styles.menu}>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => navigation.navigate("Configuracion")}
-          >
-            <Ionicons name="settings-sharp" size={20} color="black" />
-            <Text style={styles.menuText}>Configuración</Text>
-            <Entypo name="chevron-down" size={20} color="black" style={{ marginLeft: "auto" }} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => navigation.navigate("Login")}
-          >
-            <Ionicons name="log-out-outline" size={20} color="black" />
-            <Text style={styles.menuText}>Cerrar sesión</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => navigation.navigate("EliminarCuenta")}
-          >
-            <Ionicons name="warning-outline" size={20} color="black" />
-            <Text style={styles.menuText}>Eliminar cuenta</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => navigation.navigate("Ayuda")}
-          >
-            <Ionicons name="help-circle-outline" size={20} color="black" />
-            <Text style={styles.menuText}>Ayuda</Text>
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
-    </LinearGradient>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  screen: {
+    flex: 1,
   },
 
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
 
+  // NAV BAR ABAJO
+  navBarContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
   navBar: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "white",
-    paddingVertical: 10,
-    elevation: 5,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
   navItem: {
+    flex: 1,
     alignItems: "center",
-    width: SCREEN_WIDTH * 0.22,
+  },
+  navIconWrapper: {
+    padding: 8,
+    borderRadius: 999,
+  },
+  navIconActive: {
+    backgroundColor: "#EDE9FE",
+  },
+  navLabel: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    marginTop: 2,
   },
   navLabelActive: {
     color: "#7C3AED",
-    fontSize: 12,
-    marginTop: 4,
     fontWeight: "700",
   },
 
-//perfil
-  avatarContainer: {
+  // HEADER / PERFIL
+  headerCard: {
+    flexDirection: "row",
+    borderRadius: 24,
+    padding: 18,
     alignItems: "center",
-    marginVertical: 20,
+    marginBottom: 16,
+    marginTop: 25,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  avatarCircle: {
-    width: 120,
-    height: 120,
-    backgroundColor: "#E6E6E6",
-    borderRadius: 60,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10,
+  helloText: {
+    fontSize: 14,
+    color: "#6B7280",
   },
-  name: {
-    fontSize: 20,
-    fontWeight: "600",
+  nameBig: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 6,
   },
-  label: {
-    fontSize: 15,
-    marginBottom: 5,
-    marginTop: 15,
-  },
-  inputContainer: {
-    borderWidth: 1,
-    borderColor: "#555",
-    borderRadius: 8,
+  badge: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
-    marginBottom: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginBottom: 6,
   },
-  input: { flex: 1, height: 45 },
+  badgeText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: "#4B5563",
+    fontWeight: "500",
+  },
+  smallText: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  moodText: {
+    fontWeight: "600",
+    color: "#4C1D95",
+  },
+
+  avatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#E5E7EB",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 12,
+  },
+
+  // STATS
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 14,
+    marginHorizontal: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  statHint: {
+    fontSize: 11,
+    color: "#4B5563",
+    marginTop: 4,
+  },
+
+  // SECCIONES / CARDS
+  section: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 6,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+
+  // CARD CON COLOR (PREFERENCIAS & MÁS OPCIONES)
+  cardColored: {
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+
+  // CHIPS
+  chipsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#E5E7EB",
+  },
+  chipActive: {
+    backgroundColor: "#7C3AED",
+  },
+  chipText: {
+    fontSize: 13,
+    color: "#111827",
+  },
+  chipTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+
+  chipSmall: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "#E5E7EB",
+    marginRight: 6,
+    marginTop: 4,
+  },
+  chipTextSmall: {
+    fontSize: 12,
+    color: "#111827",
+  },
+  chipActiveColored: {
+    backgroundColor: "#7C3AED",
+  },
+
+  // INPUTS
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  labelInline: {
+    fontSize: 13,
+    color: "#4B5563",
+    marginTop: 10,
+  },
+  inputContainer: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    marginTop: 6,
+  },
+  input: {
+    flex: 1,
+    height: 45,
+  },
   dropdown: {
     borderWidth: 1,
-    borderColor: "#555",
-    borderRadius: 8,
-    marginBottom: 15,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    marginTop: 6,
   },
-  menu: { marginTop: 20 },
+
+  // PREFERENCIAS
+  preferenceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  preferenceTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  preferenceSubtitle: {
+    fontSize: 12,
+    color: "#4B5563",
+    marginTop: 2,
+    width: SCREEN_WIDTH * 0.5,
+  },
+
+  toggle: {
+    width: 46,
+    height: 26,
+    borderRadius: 999,
+    backgroundColor: "#E5E7EB",
+    padding: 3,
+    justifyContent: "center",
+    marginLeft: "auto",
+  },
+  toggleOn: {
+    backgroundColor: "#7C3AED",
+  },
+  toggleCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    alignSelf: "flex-start",
+  },
+  toggleCircleOn: {
+    alignSelf: "flex-end",
+  },
+
+  // MENÚ
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   menuText: {
     marginLeft: 10,
-    fontSize: 16,
+    fontSize: 15,
+    color: "#374151",
+  },
+  iconBubble: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
