@@ -43,6 +43,7 @@ export default function App() {
           <Stack.Screen name="TestPersonalidad" component={TestPersonalidad} />
           <Stack.Screen name="PantallaRapida" component={PantallaRapida} />
           <Stack.Screen name="InfoAnsiedad" component={InfoAnsiedad} />
+         
 
         </Stack.Navigator>
       </NavigationContainer>
