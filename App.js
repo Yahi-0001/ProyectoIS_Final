@@ -10,6 +10,7 @@ import Anxiosimetro from './screens/anxiosimetro';
 import Autoabrazo from "./screens/Autoabrazo";
 import Calendario from './screens/calendario';
 import CheckingScreen from './screens/CheckingScreen';
+import Escaneo from './screens/Escaneo';
 import InfoAnsiedad from "./screens/InfoAnsiedad";
 import Inicio from './screens/inicio';
 import Login from './screens/login';
@@ -53,6 +54,7 @@ export default function App() {
           <Stack.Screen name="Respiracion" component={Respiracion} />
           <Stack.Screen name="Sentidos" component={Sentidos} />
           <Stack.Screen name="Autoabrazo" component={Autoabrazo} />
+          <Stack.Screen name="Escaneo" component={Escaneo} />
 
 
 
