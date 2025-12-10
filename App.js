@@ -7,6 +7,7 @@ import { Provider as PaperProvider } from 'react-native-paper';
 
 
 import Anxiosimetro from './screens/anxiosimetro';
+import Autoabrazo from "./screens/Autoabrazo";
 import Calendario from './screens/calendario';
 import CheckingScreen from './screens/CheckingScreen';
 import InfoAnsiedad from "./screens/InfoAnsiedad";
@@ -14,11 +15,15 @@ import Inicio from './screens/inicio';
 import Login from './screens/login';
 import PantallaEjercicios from './screens/PantallaEjercicios';
 import PantallaRapida from "./screens/PantallaRapida";
+import PantallaTest from "./screens/PantallaTest";
 import Perfil from './screens/perfil';
 import Registro from './screens/registro';
+import Respiracion from "./screens/Respiracion";
+import Sentidos from "./screens/Sentidos";
 import Test from './screens/test';
 import TestDiario from './screens/TestDiario';
 import TestPersonalidad from "./screens/TestPersonalidad";
+
 
 const Stack = createNativeStackNavigator();
 
@@ -43,7 +48,14 @@ export default function App() {
           <Stack.Screen name="TestPersonalidad" component={TestPersonalidad} />
           <Stack.Screen name="PantallaRapida" component={PantallaRapida} />
           <Stack.Screen name="InfoAnsiedad" component={InfoAnsiedad} />
-         
+
+          <Stack.Screen name="PantallaTest" component={PantallaTest} />
+          <Stack.Screen name="Respiracion" component={Respiracion} />
+          <Stack.Screen name="Sentidos" component={Sentidos} />
+          <Stack.Screen name="Autoabrazo" component={Autoabrazo} />
+
+
+
 
         </Stack.Navigator>
       </NavigationContainer>
