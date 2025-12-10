@@ -5,6 +5,8 @@ import {
   Alert,
   Dimensions,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -37,101 +39,119 @@ export default function Login({ navigation }) {
       style={styles.background}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator={false}
+        {/* 🔑 Esto hace que la pantalla se mueva con el teclado */}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          {/* ENCABEZADO */}
-          <Text style={styles.appName}>Anxiously 💜</Text>
-          <Text style={styles.title}>Bienvenida de nuevo</Text>
-          <Text style={styles.subtitle}>Este es tu espacio seguro para respirar y sentirte mejor.</Text>
-
-          {/* CHIPS MOTIVACIONALES */}
-          <View style={styles.chipsRow}>
-            <View style={[styles.chip, { backgroundColor: '#ede9fe' }]}>
-              <Text style={styles.chipText}>Respira profundo 🌬️</Text>
-            </View>
-            <View style={[styles.chip, { backgroundColor: '#fee2e2' }]}>
-              <Text style={styles.chipText}>Sé amable contigo 💕</Text>
-            </View>
-          </View>
-
-          {/* TARJETA DEL FORMULARIO */}
-          <View style={styles.card}>
-            {/* Imagen */}
-            <Image
-              source={require('../assets/loginIllustration.png')}
-              style={styles.image}
-            />
-
-            {/* TÍTULO DENTRO DEL CARD */}
-            <Text style={styles.cardTitle}>Iniciar sesión</Text>
-            <Text style={styles.cardSubtitle}>
-              Ingresa tus datos para continuar con tu proceso de calma.
+          <ScrollView
+            contentContainerStyle={styles.container}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* ENCABEZADO */}
+            <Text style={styles.appName}>Anxiously 💜</Text>
+            <Text style={styles.title}>Bienvenida de nuevo</Text>
+            <Text style={styles.subtitle}>
+              Este es tu espacio seguro para respirar y sentirte mejor.
             </Text>
 
-            {/* Input correo */}
-            <View style={styles.inputBox}>
-              <MaterialIcons
-                name="email"
-                size={20}
-                color="#7C3AED"
-                style={{ marginRight: 10 }}
-              />
-              <TextInput
-                placeholder="Correo electrónico o número"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                style={styles.input}
-              />
+            {/* CHIPS MOTIVACIONALES */}
+            <View style={styles.chipsRow}>
+              <View style={[styles.chip, { backgroundColor: '#ede9fe' }]}>
+                <Text style={styles.chipText}>Respira profundo 🌬️</Text>
+              </View>
+              <View style={[styles.chip, { backgroundColor: '#fee2e2' }]}>
+                <Text style={styles.chipText}>Sé amable contigo 💕</Text>
+              </View>
             </View>
 
-            {/* Input contraseña */}
-            <View style={styles.inputBox}>
-              <MaterialIcons
-                name="lock"
-                size={20}
-                color="#7C3AED"
-                style={{ marginRight: 10 }}
+            {/* TARJETA DEL FORMULARIO */}
+            <View style={styles.card}>
+              {/* Imagen */}
+              <Image
+                source={require('../assets/loginIllustration.png')}
+                style={styles.image}
               />
-              <TextInput
-                placeholder="Contraseña"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-              />
-            </View>
 
-            {/* Botón iniciar sesión */}
-            <TouchableOpacity onPress={handleLogin} style={styles.buttonContainer}>
-              <LinearGradient
-                colors={['#5B0EAD', '#ec4899']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.button}
+              {/* TÍTULO DENTRO DEL CARD */}
+              <Text style={styles.cardTitle}>Iniciar sesión</Text>
+              <Text style={styles.cardSubtitle}>
+                Ingresa tus datos para continuar con tu proceso de calma.
+              </Text>
+
+              {/* Input correo */}
+              <View style={styles.inputBox}>
+                <MaterialIcons
+                  name="email"
+                  size={20}
+                  color="#7C3AED"
+                  style={{ marginRight: 10 }}
+                />
+                <TextInput
+                  placeholder="Correo electrónico o número"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  style={styles.input}
+                  returnKeyType="next"
+                />
+              </View>
+
+              {/* Input contraseña */}
+              <View style={styles.inputBox}>
+                <MaterialIcons
+                  name="lock"
+                  size={20}
+                  color="#7C3AED"
+                  style={{ marginRight: 10 }}
+                />
+                <TextInput
+                  placeholder="Contraseña"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.input}
+                  returnKeyType="done"
+                />
+              </View>
+
+              {/* Botón iniciar sesión */}
+              <TouchableOpacity
+                onPress={handleLogin}
+                style={styles.buttonContainer}
               >
-                <Text style={styles.buttonText}>INICIAR SESIÓN</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Frase pequeña */}
-            <Text style={styles.helperText}>
-              🌸 Recuerda: no tienes que estar perfecta para empezar, solo presente.
-            </Text>
-
-            {/* Footer registrar */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>¿Aún no tienes una cuenta? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
-                <Text style={styles.register}>Registrarse</Text>
+                <LinearGradient
+                  colors={['#5B0EAD', '#ec4899']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.button}
+                >
+                  <Text style={styles.buttonText}>INICIAR SESIÓN</Text>
+                </LinearGradient>
               </TouchableOpacity>
+
+              {/* Frase pequeña */}
+              <Text style={styles.helperText}>
+                🌸 Recuerda: no tienes que estar perfecta para empezar, solo
+                presente.
+              </Text>
+
+              {/* Footer registrar */}
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>¿Aún no tienes una cuenta? </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Registro')}
+                >
+                  <Text style={styles.register}>Registrarse</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -147,6 +167,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: isSmallDevice ? 20 : 32,
+    paddingBottom: 40, // un extra para que pueda subir sobre el teclado
   },
 
   // TEXTOS ARRIBA
