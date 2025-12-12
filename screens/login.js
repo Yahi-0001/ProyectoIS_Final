@@ -39,7 +39,7 @@ export default function Login({ navigation }) {
 
       Alert.alert('Éxito', 'Usuario logueado: ' + user.email);
       // Aquí puedes navegar al perfil o dashboard
-      navigation.navigate('Perfil', { uid: user.uid });
+      navigation.navigate('Test', { uid: user.uid });
     } catch (error) {
       Alert.alert('Error', error.message);
     }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Dimensions,
   SafeAreaView,
@@ -9,6 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 import {
   Entypo,
@@ -26,55 +29,124 @@ export default function ProfileScreen({ navigation }) {
   const [email, setEmail] = useState("marir8046@gmail.com");
   const [phone, setPhone] = useState("27134578941");
   const [language, setLanguage] = useState("es");
+
+  // NAV: Perfil activo
   const [activeNav, setActiveNav] = useState(3);
 
+  // cositas interactivas del perfil
   const [mood, setMood] = useState("Tranquila 😌");
   const [goal, setGoal] = useState("3 chequeos al día");
   const [notificationsOn, setNotificationsOn] = useState(true);
+
+  // ✅ contadores reales
+  const [calmStreak, setCalmStreak] = useState(0);
+  const [sessionsCount, setSessionsCount] = useState(0);
+
+  // ---------- helpers de fecha (local) ----------
+  const getLocalDateKey = (date = new Date()) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`; // "YYYY-MM-DD"
+  };
+
+  const getYesterdayKey = () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return getLocalDateKey(d);
+  };
+
+  // ---------- cargar contadores al entrar a Perfil ----------
+  const loadCounters = async () => {
+    const streakSaved = await AsyncStorage.getItem("@calm_streak");
+    const sessionsSaved = await AsyncStorage.getItem("@sessions_count");
+
+    setCalmStreak(streakSaved ? Number(streakSaved) : 0);
+    setSessionsCount(sessionsSaved ? Number(sessionsSaved) : 0);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadCounters();
+    }, [])
+  );
+
+  // ---------- racha: registrar “Tranquila” 1 vez por día ----------
+  const registerCalmDay = async () => {
+    const today = getLocalDateKey();
+    const yesterday = getYesterdayKey();
+
+    const lastDay = await AsyncStorage.getItem("@calm_last_day");
+    const streakSaved = await AsyncStorage.getItem("@calm_streak");
+    let streak = streakSaved ? Number(streakSaved) : 0;
+
+    // Si ya registraste hoy, no sumes de nuevo
+    if (lastDay === today) return;
+
+    if (lastDay === yesterday) {
+      streak = streak + 1;
+    } else {
+      streak = 1;
+    }
+
+    await AsyncStorage.setItem("@calm_last_day", today);
+    await AsyncStorage.setItem("@calm_streak", String(streak));
+    setCalmStreak(streak);
+  };
+
+  // ---------- sesiones: sumar 1 ----------
+  const addSession = async () => {
+    const saved = await AsyncStorage.getItem("@sessions_count");
+    const current = saved ? Number(saved) : 0;
+    const next = current + 1;
+
+    await AsyncStorage.setItem("@sessions_count", String(next));
+    setSessionsCount(next);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3e8ff" }}>
       <LinearGradient colors={["#faf5ff", "#f3e8ff"]} style={{ flex: 1 }}>
         <View style={styles.screen}>
-
-          {/* NAV BAR ARRIBA (BAJADA) */}
-          <View style={styles.navBar}>
-            {[
-              ["stats-chart-outline", "Anxiósometro", "Anxiosimetro"],
-              ["calendar-outline", "Calendario", "Calendario"],
-              ["heart-outline", "Checking", "Checking"],
-              ["person-circle-outline", "Perfil", "Perfil"],
-            ].map(([icon, label, screen], i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.navItem}
-                onPress={() => {
-                  setActiveNav(i);
-                  navigation.navigate(screen);
-                }}
-              >
-                <Ionicons
-                  name={icon}
-                  size={26}
-                  color={activeNav === i ? "#7C3AED" : "#9CA3AF"}
-                />
-                {activeNav === i && (
-                  <Text style={styles.navLabelActive}>{label}</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-
           {/* CONTENIDO */}
           <ScrollView
             style={styles.container}
-            contentContainerStyle={{ paddingBottom: 20 }}
+            contentContainerStyle={{ paddingBottom: 18 }}
             showsVerticalScrollIndicator={false}
           >
+            {/* ✅ NAV BAR ARRIBA (igual que Anxiosimetro) */}
+            <View style={styles.navBarTop}>
+              {[
+                ["stats-chart-outline", "Anxiósometro", "Anxiosimetro"],
+                ["calendar-outline", "Calendario", "Calendario"],
+                ["heart-outline", "Checking", "Checking"],
+                ["person-circle-outline", "Perfil", "Perfil"],
+              ].map(([icon, label, screen], i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.navItemTop}
+                  onPress={() => {
+                    setActiveNav(i);
+                    navigation.navigate(screen);
+                  }}
+                >
+                  <Ionicons
+                    name={icon}
+                    size={26}
+                    color={activeNav === i ? "#7C3AED" : "#9CA3AF"}
+                  />
+                  {activeNav === i && (
+                    <Text style={styles.navLabelActiveTop}>{label}</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
 
-            {/* TARJETA DE BIENVENIDA */}
+            {/* TARJETA DE BIENVENIDA CON DEGRADADO */}
             <LinearGradient
               colors={["#ffffff", "#f5f3ff"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={styles.headerCard}
             >
               <View style={{ flex: 1 }}>
@@ -83,13 +155,11 @@ export default function ProfileScreen({ navigation }) {
 
                 <LinearGradient
                   colors={["#ede9fe", "#e0f2fe"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
                   style={styles.badge}
                 >
-                  <Ionicons
-                    name="sparkles-outline"
-                    size={16}
-                    color="#7C3AED"
-                  />
+                  <Ionicons name="sparkles-outline" size={16} color="#7C3AED" />
                   <Text style={styles.badgeText}>Tu espacio seguro 💜</Text>
                 </LinearGradient>
 
@@ -107,24 +177,33 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.statsRow}>
               <LinearGradient
                 colors={["#fef3c7", "#ffe4e6"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={styles.statCard}
               >
                 <Text style={styles.statLabel}>Racha de calma 🔥</Text>
-                <Text style={styles.statNumber}>5 días</Text>
+                <Text style={styles.statNumber}>{calmStreak} días</Text>
                 <Text style={styles.statHint}>Sigue así, lo haces genial</Text>
               </LinearGradient>
 
               <LinearGradient
                 colors={["#dbeafe", "#ede9fe"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={styles.statCard}
               >
                 <Text style={styles.statLabel}>Sesiones 🎧</Text>
-                <Text style={styles.statNumber}>18</Text>
+                <Text style={styles.statNumber}>{sessionsCount}</Text>
                 <Text style={styles.statHint}>Tu mente se está cuidando</Text>
               </LinearGradient>
             </View>
 
-            {/* ESTADO */}
+            {/* ✅ BOTÓN: HICE UNA SESIÓN */}
+            <TouchableOpacity onPress={addSession} style={styles.sessionButton}>
+              <Text style={styles.sessionButtonText}>Hice una sesión 🎧</Text>
+            </TouchableOpacity>
+
+            {/* ESTADO DE HOY */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Tu estado de hoy ✨</Text>
               <Text style={styles.sectionSubtitle}>
@@ -135,11 +214,15 @@ export default function ProfileScreen({ navigation }) {
                 {["Tranquila 😌", "Nerviosa 😰", "Cansada 🥱"].map((item) => (
                   <TouchableOpacity
                     key={item}
-                    style={[
-                      styles.chip,
-                      mood === item && styles.chipActive,
-                    ]}
-                    onPress={() => setMood(item)}
+                    style={[styles.chip, mood === item && styles.chipActive]}
+                    onPress={async () => {
+                      setMood(item);
+
+                      // ✅ si marca tranquila, registra el día para racha
+                      if (item === "Tranquila 😌") {
+                        await registerCalmDay();
+                      }
+                    }}
                   >
                     <Text
                       style={[
@@ -158,14 +241,22 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Datos personales 👤</Text>
 
+              {/* NOMBRE */}
               <View style={styles.rowBetween}>
                 <Text style={styles.labelInline}>Nombre</Text>
-                <MaterialIcons name="edit" size={18} color="#7C3AED" />
+                <TouchableOpacity>
+                  <MaterialIcons name="edit" size={18} color="#7C3AED" />
+                </TouchableOpacity>
               </View>
               <View style={styles.inputContainer}>
-                <TextInput style={styles.input} value={name} onChangeText={setName} />
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                />
               </View>
 
+              {/* CORREO */}
               <View style={styles.rowBetween}>
                 <Text style={styles.labelInline}>Correo</Text>
                 <MaterialIcons name="email" size={16} color="#7C3AED" />
@@ -175,10 +266,12 @@ export default function ProfileScreen({ navigation }) {
                   style={styles.input}
                   value={email}
                   onChangeText={setEmail}
+                  keyboardType="email-address"
                 />
                 <MaterialIcons name="edit" size={20} color="#7C3AED" />
               </View>
 
+              {/* TELÉFONO */}
               <View style={styles.rowBetween}>
                 <Text style={styles.labelInline}>Número celular</Text>
                 <MaterialIcons name="phone-android" size={16} color="#7C3AED" />
@@ -188,10 +281,12 @@ export default function ProfileScreen({ navigation }) {
                   style={styles.input}
                   value={phone}
                   onChangeText={setPhone}
+                  keyboardType="phone-pad"
                 />
                 <MaterialIcons name="edit" size={20} color="#7C3AED" />
               </View>
 
+              {/* IDIOMA */}
               <Text style={styles.labelInline}>Idioma 🌐</Text>
               <View style={styles.dropdown}>
                 <Picker selectedValue={language} onValueChange={setLanguage}>
@@ -201,9 +296,11 @@ export default function ProfileScreen({ navigation }) {
               </View>
             </View>
 
-            {/* METAS */}
+            {/* PREFERENCIAS & METAS */}
             <LinearGradient
               colors={["#fdf2ff", "#e0f2fe"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={styles.cardColored}
             >
               <Text style={styles.sectionTitle}>Preferencias & metas 🎯</Text>
@@ -244,10 +341,7 @@ export default function ProfileScreen({ navigation }) {
                 </View>
 
                 <TouchableOpacity
-                  style={[
-                    styles.toggle,
-                    notificationsOn && styles.toggleOn,
-                  ]}
+                  style={[styles.toggle, notificationsOn && styles.toggleOn]}
                   onPress={() => setNotificationsOn(!notificationsOn)}
                 >
                   <View
@@ -263,6 +357,8 @@ export default function ProfileScreen({ navigation }) {
             {/* MÁS OPCIONES */}
             <LinearGradient
               colors={["#eef2ff", "#fef9c3"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={styles.cardColored}
             >
               <Text style={styles.sectionTitle}>Más opciones ⚙️</Text>
@@ -275,7 +371,12 @@ export default function ProfileScreen({ navigation }) {
                   <Ionicons name="settings-sharp" size={18} color="#1D4ED8" />
                 </View>
                 <Text style={styles.menuText}>Configuración</Text>
-                <Entypo name="chevron-right" size={20} color="#6B7280" />
+                <Entypo
+                  name="chevron-right"
+                  size={20}
+                  color="#6B7280"
+                  style={{ marginLeft: "auto" }}
+                />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -283,10 +384,19 @@ export default function ProfileScreen({ navigation }) {
                 onPress={() => navigation.navigate("Ayuda")}
               >
                 <View style={[styles.iconBubble, { backgroundColor: "#fef3c7" }]}>
-                  <Ionicons name="help-circle-outline" size={18} color="#B45309" />
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={18}
+                    color="#B45309"
+                  />
                 </View>
                 <Text style={styles.menuText}>Centro de ayuda</Text>
-                <Entypo name="chevron-right" size={20} color="#6B7280" />
+                <Entypo
+                  name="chevron-right"
+                  size={20}
+                  color="#6B7280"
+                  style={{ marginLeft: "auto" }}
+                />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -321,71 +431,83 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-
   screen: { flex: 1 },
 
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 12,
   },
 
-  /* ⭐ NAV BAR ARRIBA (BAJADA Y BONITA) */
-  navBar: {
+  // ✅ NAV BAR ARRIBA (igual a anxiosimetro)
+  navBarTop: {
     flexDirection: "row",
     justifyContent: "space-around",
     backgroundColor: "white",
     paddingVertical: 10,
-    elevation: 6,
+    elevation: 5,
+    borderRadius: 16,
 
-    marginTop: 30,               // 
-    borderBottomLeftRadius: 22,  // opcional
-    borderBottomRightRadius: 22, // opcional
-
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    marginTop: 25,      // 👈 BAJA la barra
+    marginBottom: 14,
   },
-  navItem: {
+  navItemTop: {
     alignItems: "center",
     width: SCREEN_WIDTH * 0.22,
   },
-  navLabelActive: {
+  navLabelActiveTop: {
     color: "#7C3AED",
     fontSize: 12,
     marginTop: 4,
     fontWeight: "700",
   },
 
-  /* HEADER */
+  // HEADER / PERFIL
   headerCard: {
     flexDirection: "row",
     borderRadius: 24,
     padding: 18,
     alignItems: "center",
     marginBottom: 16,
-    marginTop: 25,
+    marginTop: 8,
     shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  helloText: { fontSize: 14, color: "#6B7280" },
-  nameBig: { fontSize: 22, fontWeight: "700", color: "#111827" },
+  helloText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  nameBig: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 6,
+  },
   badge: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    marginTop: 6,
+    marginBottom: 6,
   },
-  badgeText: { marginLeft: 4, fontSize: 12, color: "#4B5563" },
-
-  smallText: { fontSize: 13, color: "#6B7280", marginTop: 6 },
-  moodText: { fontWeight: "600", color: "#4C1D95" },
+  badgeText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: "#4B5563",
+    fontWeight: "500",
+  },
+  smallText: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  moodText: {
+    fontWeight: "600",
+    color: "#4C1D95",
+  },
 
   avatarCircle: {
     width: 80,
@@ -394,75 +516,152 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E7EB",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 18,
+    marginLeft: 12,
   },
 
-  /* STATS */
+  // STATS
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   statCard: {
     flex: 1,
     borderRadius: 20,
-    padding: 16,
+    padding: 14,
     marginHorizontal: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
-  statLabel: { fontSize: 12, color: "#6B7280" },
-  statNumber: { fontSize: 20, fontWeight: "700", color: "#111827" },
-
+  statLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
+  },
   statHint: {
     fontSize: 11,
     color: "#4B5563",
     marginTop: 4,
   },
 
-  /* ESTADO */
-  section: { marginBottom: 16 },
+  // ✅ botón sesión
+  sessionButton: {
+    backgroundColor: "#7C3AED",
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  sessionButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  // SECCIONES / CARDS
+  section: {
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#111827",
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  sectionSubtitle: { fontSize: 12, color: "#6B7280" },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
 
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+
+  cardColored: {
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+
+  // CHIPS
   chipsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
-    marginTop: 10,
+    gap: 8,
   },
   chip: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: "#E5E7EB",
   },
-  chipActive: { backgroundColor: "#7C3AED" },
-  chipText: { fontSize: 13, color: "#111" },
-  chipTextActive: { color: "#fff", fontWeight: "700" },
+  chipActive: {
+    backgroundColor: "#7C3AED",
+  },
+  chipText: {
+    fontSize: 13,
+    color: "#111827",
+  },
+  chipTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
 
   chipSmall: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 99,
+    borderRadius: 999,
     backgroundColor: "#E5E7EB",
+    marginRight: 6,
     marginTop: 4,
   },
-  chipTextSmall: { fontSize: 12, color: "#111827" },
-  chipActiveColored: { backgroundColor: "#7C3AED" },
+  chipTextSmall: {
+    fontSize: 12,
+    color: "#111827",
+  },
+  chipActiveColored: {
+    backgroundColor: "#7C3AED",
+  },
 
-  /* INPUTS */
+  // INPUTS
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 10,
   },
-  labelInline: { fontSize: 13, color: "#4B5563", marginTop: 8 },
-
+  labelInline: {
+    fontSize: 13,
+    color: "#4B5563",
+    marginTop: 10,
+  },
   inputContainer: {
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -472,9 +671,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginTop: 6,
   },
-
-  input: { flex: 1, height: 45 },
-
+  input: {
+    flex: 1,
+    height: 45,
+  },
   dropdown: {
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -482,8 +682,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  /* PREFERENCIAS */
-  preferenceRow: { flexDirection: "row", alignItems: "center" },
+  // PREFERENCIAS
+  preferenceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   preferenceTitle: {
     fontSize: 14,
     fontWeight: "600",
@@ -493,7 +696,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#4B5563",
     marginTop: 2,
-    width: SCREEN_WIDTH * 0.55,
+    width: SCREEN_WIDTH * 0.5,
   },
 
   toggle: {
@@ -503,31 +706,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E7EB",
     padding: 3,
     justifyContent: "center",
+    marginLeft: "auto",
   },
-  toggleOn: { backgroundColor: "#7C3AED" },
+  toggleOn: {
+    backgroundColor: "#7C3AED",
+  },
   toggleCircle: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     alignSelf: "flex-start",
   },
-  toggleCircleOn: { alignSelf: "flex-end" },
-
-  /* CARDS DE COLOR */
-  cardColored: {
-    borderRadius: 24,
-    padding: 16,
-    marginBottom: 16,
+  toggleCircleOn: {
+    alignSelf: "flex-end",
   },
 
-  /* MÁS OPCIONES */
-  card: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 24,
-    marginBottom: 16,
-  },
+  // MENÚ
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -546,3 +741,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+
