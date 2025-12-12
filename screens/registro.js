@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import {
-  View,
+  Image,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Image,
+  View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Picker } from '@react-native-picker/picker';
-import { Ionicons } from '@expo/vector-icons';
+
+//importamos la base de datos
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from '../config/firebaseConfig';
+
+
 
 export default function Registro({ navigation }) {
   const [correo, setCorreo] = useState('');
@@ -24,12 +31,12 @@ export default function Registro({ navigation }) {
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
 
-  const handleRegistro = () => {
+    const handleRegistro = async () => {
     let nuevosErrores = {};
+
     if (!correo) nuevosErrores.correo = 'El correo es obligatorio.';
     if (!password) nuevosErrores.password = 'La contraseña es obligatoria.';
-    if (!confirmarPassword)
-      nuevosErrores.confirmarPassword = 'Confirma tu contraseña.';
+    if (!confirmarPassword) nuevosErrores.confirmarPassword = 'Confirma tu contraseña.';
     else if (password !== confirmarPassword)
       nuevosErrores.confirmarPassword = 'Las contraseñas no coinciden.';
     if (!genero) nuevosErrores.genero = 'Selecciona tu sexo.';
@@ -39,7 +46,22 @@ export default function Registro({ navigation }) {
     setErrores(nuevosErrores);
 
     if (Object.keys(nuevosErrores).length === 0) {
-      navigation.navigate('Login', { email: correo });
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, correo, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, 'usuarios', user.uid), {
+          correo,
+          pais,
+          telefono,
+          genero,
+          createdAt: new Date(),
+        });
+
+        navigation.navigate('Login', { email: correo });
+      } catch (error) {
+        setErrores({ firebase: error.message });
+      }
     }
   };
 

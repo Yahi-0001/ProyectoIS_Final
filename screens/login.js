@@ -16,6 +16,10 @@ import {
   View,
 } from 'react-native';
 
+//base de datos
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const isSmallDevice = SCREEN_HEIGHT < 700;
 
@@ -23,13 +27,24 @@ export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    if (email && password) {
-      navigation.navigate('Test'); // pantalla de prueba
-    } else {
+    const handleLogin = async () => {
+    if (!email || !password) {
       Alert.alert('Error', 'Ingresa correo y contraseña');
+      return;
+    }
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      Alert.alert('Éxito', 'Usuario logueado: ' + user.email);
+      // Aquí puedes navegar al perfil o dashboard
+      navigation.navigate('Perfil', { uid: user.uid });
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
   };
+
 
   return (
     <LinearGradient
