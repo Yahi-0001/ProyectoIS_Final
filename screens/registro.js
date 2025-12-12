@@ -3,6 +3,7 @@ import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -31,7 +32,7 @@ export default function Registro({ navigation }) {
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
 
-    const handleRegistro = async () => {
+  const handleRegistro = async () => {
     let nuevosErrores = {};
 
     if (!correo) nuevosErrores.correo = 'El correo es obligatorio.';
@@ -45,25 +46,63 @@ export default function Registro({ navigation }) {
 
     setErrores(nuevosErrores);
 
-    if (Object.keys(nuevosErrores).length === 0) {
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, correo, password);
-        const user = userCredential.user;
+    if (Object.keys(nuevosErrores).length > 0) return; // Salir si hay errores
 
-        await setDoc(doc(db, 'usuarios', user.uid), {
-          correo,
-          pais,
-          telefono,
-          genero,
-          createdAt: new Date(),
-        });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, correo, password);
+      const user = userCredential.user;
 
-        navigation.navigate('Login', { email: correo });
-      } catch (error) {
-        setErrores({ firebase: error.message });
+      await setDoc(doc(db, 'usuarios', user.uid), {
+        correo,
+        pais,
+        telefono,
+        genero,
+        createdAt: new Date(),
+      });
+
+      // Mensaje en pantalla
+      setMensajeExito(`¡Te has registrado correctamente como ${correo}!`);
+
+      // Alert con opción a ir al login, garantizado al primer clic
+      setTimeout(() => {
+        Alert.alert(
+          'Registro exitoso',
+          `¡Te has registrado correctamente como ${correo}! ¿Deseas ir al login?`,
+          [
+            {
+              text: 'Sí',
+              onPress: () => navigation.replace('Login', { email: correo }),
+            },
+            {
+              text: 'No',
+              style: 'cancel'
+            }
+          ]
+        );
+      }, 0);
+
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert(
+          'Correo ya registrado',
+          'Este correo ya tiene una cuenta. ¿Deseas ir al login?',
+          [
+            {
+              text: 'Sí',
+              onPress: () => navigation.navigate('Login', { email: correo }),
+            },
+            {
+              text: 'No',
+              style: 'cancel'
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', error.message);
       }
     }
   };
+
 
   return (
     <LinearGradient colors={['#ffffffff', '#ffffffff']} style={{ flex: 1 }}>
