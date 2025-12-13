@@ -184,13 +184,13 @@ para obtener apoyo inmediato cuando me siento mal.
 ### **HU-11 – Creación de base de datos en la nube**  
  
 
-**Como usuario**,  
+**Como usuario**
 quiero que la app tenga una base de datos en la nube,  
 para que pueda guardar y consultar información.
 
 **Criterios de aceptación:**  
 - Se almacena solo la información necesaria (sin datos sensibles).  
-- Permite guardar ejercicios, frases calmantes y registros necesarios para la app.  
+- Permite guardar registros necesarios para la app.  
 
 **Prioridad:** Alta  
 **Story Points:** 5
