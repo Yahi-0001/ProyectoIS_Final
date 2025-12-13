@@ -4,19 +4,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as Notifications from "expo-notifications";
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CONGRATS_IDS_KEY = "@congrats_notif_ids";
 
@@ -29,6 +27,17 @@ Notifications.setNotificationHandler({
 });
 
 export default function Anxiosimetro({ navigation, route }) {
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+
+  // helpers solo para responsive (no cambia diseño, solo escala)
+  const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
+
+  const NAV_ITEM_W = SCREEN_WIDTH * 0.22;
+  const CARD_W = Math.min(SCREEN_WIDTH - 40, 430); // mantiene look, pero evita que en tablets quede enorme
+  const IMAGE_SIZE = clamp(SCREEN_WIDTH * 0.45, 150, 190); // se ve igual pero escala
+  const BAR_H = clamp(SCREEN_WIDTH * 0.13, 50, 58); // ~55 promedio
+  const BAR_TRIANGLE_H = BAR_H;
+
   const [tiempo, setTiempo] = useState({
     dias: 0,
     horas: 0,
@@ -129,9 +138,8 @@ export default function Anxiosimetro({ navigation, route }) {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: when,
         },
-      
-      });
 
+      });
 
       ids.push(id);
     }
@@ -249,7 +257,7 @@ export default function Anxiosimetro({ navigation, route }) {
           ].map(([icon, label], i) => (
             <TouchableOpacity
               key={i}
-              style={styles.navItem}
+              style={[styles.navItem, { width: NAV_ITEM_W }]}
               onPress={() => {
                 setActiveNav(i);
 
@@ -288,14 +296,14 @@ export default function Anxiosimetro({ navigation, route }) {
             ];
 
             return (
-              <View key={i} style={styles.barContainer}>
+              <View key={i} style={[styles.barContainer, { height: BAR_H }]}>
                 <Animated.View
                   style={[
                     styles.barFill,
                     { width: widths[i], backgroundColor: color },
                   ]}
                 >
-                  <View style={[styles.triangle, { borderLeftColor: color }]} />
+                  <View style={[styles.triangle, { borderLeftColor: color, borderBottomWidth: BAR_TRIANGLE_H }]} />
                 </Animated.View>
 
                 <Text style={styles.barText}>
@@ -306,14 +314,14 @@ export default function Anxiosimetro({ navigation, route }) {
           })}
 
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-            <View style={styles.whiteCard}>
+            <View style={[styles.whiteCard, { width: CARD_W }]}>
               <Image
                 source={
                   genero === 'Femenino'
                     ? require('../assets/mujer.png')
                     : require('../assets/hombre.png')
                 }
-                style={styles.image}
+                style={[styles.image, { width: IMAGE_SIZE, height: IMAGE_SIZE }]}
               />
 
               <View style={styles.saludoBox}>
@@ -328,14 +336,12 @@ export default function Anxiosimetro({ navigation, route }) {
                   <TouchableOpacity
                     style={styles.monitorButton}
                     onPress={async () => {
-         
+
                       const now = new Date().toISOString();
                       await AsyncStorage.setItem('inicioAnsiedad', now);
 
-
                       await scheduleCongratsForDays(now, 30);
 
-            
                       startMonitoring(now);
                     }}
                   >
@@ -389,7 +395,7 @@ const styles = StyleSheet.create({
 
   navItem: {
     alignItems: 'center',
-    width: SCREEN_WIDTH * 0.22,
+    // width: SCREEN_WIDTH * 0.22, // ahora es dinámico en el render
   },
 
   navLabelActive: {
@@ -415,7 +421,7 @@ const styles = StyleSheet.create({
 
   barContainer: {
     width: '90%',
-    height: 55,
+    // height: 55, // ahora es dinámico en el render
     backgroundColor: '#9ea1a5ff',
     borderRadius: 14,
     marginVertical: 6,
@@ -444,7 +450,7 @@ const styles = StyleSheet.create({
     right: -9,
     width: 0,
     height: '100%',
-    borderBottomWidth: 55,
+    // borderBottomWidth: 55, // ahora es dinámico en el render
     borderLeftWidth: 10,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
@@ -452,7 +458,7 @@ const styles = StyleSheet.create({
 
   whiteCard: {
     backgroundColor: 'white',
-    width: SCREEN_WIDTH - 40,
+    // width: SCREEN_WIDTH - 40, // ahora es dinámico en el render
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 10,
@@ -461,8 +467,8 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: 180,
-    height: 180,
+    // width: 180,
+    // height: 180, // ahora es dinámico en el render
     marginVertical: 10,
     borderRadius: 12,
   },
