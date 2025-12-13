@@ -30,14 +30,14 @@ export default function Registro({ navigation }) {
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
 
-  // ✅ NUEVO: nombre y apellidos
+  // nombre y apellidos
   const [nombre, setNombre] = useState('');
   const [apellidos, setApellidos] = useState('');
 
   const handleRegistro = async () => {
     let nuevosErrores = {};
 
-    // ✅ NUEVO: validaciones
+    // validaciones
     if (!nombre) nuevosErrores.nombre = 'El nombre es obligatorio.';
     if (!apellidos) nuevosErrores.apellidos = 'Los apellidos son obligatorios.';
 
@@ -59,10 +59,9 @@ export default function Registro({ navigation }) {
       const user = userCredential.user;
 
       await setDoc(doc(db, 'usuarios', user.uid), {
-        // ✅ NUEVO: guardar nombre y apellidos
+        // guardar nombre y apellidos
         nombre,
         apellidos,
-
         correo,
         pais,
         telefono,
@@ -70,27 +69,16 @@ export default function Registro({ navigation }) {
         createdAt: new Date(),
       });
 
-      // Mensaje en pantalla
-      setMensajeExito(`¡Te has registrado correctamente como ${correo}!`);
-
-      // Alert con opción a ir al login, garantizado al primer clic
-      setTimeout(() => {
-        Alert.alert(
-          'Registro exitoso',
-          `¡Te has registrado correctamente como ${correo}! ¿Deseas ir al login?`,
-          [
-            {
-              text: 'Sí',
-              onPress: () => navigation.replace('Login', { email: correo }),
-            },
-            {
-              text: 'No',
-              style: 'cancel'
-            }
-          ]
-        );
-      }, 0);
-
+      Alert.alert(
+        'Registro exitoso 🎉',
+        'Te has registrado correctamente',
+        [
+          {
+            text: 'Ir al Login',
+            onPress: () => navigation.replace('Login', { email: correo }),
+          }
+        ]
+      );
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
         Alert.alert(
@@ -137,7 +125,7 @@ export default function Registro({ navigation }) {
           <View style={styles.container}>
             <Text style={styles.title}>Regístrate a Anxiously</Text>
 
-            {/* ✅ NUEVO: Nombre */}
+            {/*  Nombre */}
             <Text style={styles.label}>Ingresa tu nombre</Text>
             <TextInput
               style={styles.input}
@@ -148,7 +136,7 @@ export default function Registro({ navigation }) {
             />
             {errores.nombre && <Text style={styles.error}>{errores.nombre}</Text>}
 
-            {/* ✅ NUEVO: Apellidos */}
+            {/* Apellidos */}
             <Text style={styles.label}>Ingresa tus apellidos</Text>
             <TextInput
               style={styles.input}

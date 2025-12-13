@@ -26,8 +26,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 
-// ✅ NUEVO: para respetar status bar (batería/hora) y NO pegarse arriba
+//  para respetar status bar (batería/hora) y NO pegarse arriba
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+//importamos la base de datos
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../config/firebaseConfig";
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -43,13 +48,13 @@ Notifications.setNotificationHandler({
 });
 
 export default function ProfileScreen({ navigation }) {
-  // ✅ NUEVO
   const insets = useSafeAreaInsets();
 
-  const [name, setName] = useState("Regina Gámez");
-  const [email, setEmail] = useState("marir8046@gmail.com");
-  const [phone, setPhone] = useState("27134578941");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [language, setLanguage] = useState("es");
+
 
   // NAV: Perfil activo
   const [activeNav, setActiveNav] = useState(3);
@@ -170,6 +175,7 @@ export default function ProfileScreen({ navigation }) {
     useCallback(() => {
       loadCounters();
       loadPreferences();
+      loadProfileData();
     }, [])
   );
 
@@ -203,6 +209,27 @@ export default function ProfileScreen({ navigation }) {
 
     await AsyncStorage.setItem("@sessions_count", String(next));
     setSessionsCount(next);
+  };
+
+  const loadProfileData = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const ref = doc(db, "usuarios", user.uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const data = snap.data();
+
+        setName(data.nombre ?? "");  
+        setEmail(data.correo ?? user.email);
+        setPhone(data.telefono ?? "");
+        
+      }
+    } catch (error) {
+      console.log("Error cargando perfil:", error);
+    }
   };
 
   return (
