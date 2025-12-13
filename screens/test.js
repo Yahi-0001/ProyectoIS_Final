@@ -8,6 +8,7 @@ import {
   Alert,
   Animated,
   FlatList,
+  Modal,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -18,7 +19,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 
 // --- Animación de caritas neutrales para resultado MODERADO ---
 function NeutralFaces() {
-  const caras = Array.from({ length: 20 }, (_, i) => i); // 20 caritas
+  const caras = Array.from({ length: 20 }, (_, i) => i);
   return (
     <>
       {caras.map((c) => (
@@ -65,7 +66,7 @@ function AnimatedNeutralFace() {
 
 // --- Animación de caritas llorando para resultado ALTO ---
 function CryingFaces() {
-  const caras = Array.from({ length: 20 }, (_, i) => i); // 20 caritas
+  const caras = Array.from({ length: 20 }, (_, i) => i);
   return (
     <>
       {caras.map((c) => (
@@ -110,6 +111,46 @@ function AnimatedCryingFace() {
   );
 }
 
+// ✅ Loader de 3 puntitos animados (sin librerías extra)
+function DotLoader() {
+  const a1 = useRef(new Animated.Value(0.25)).current;
+  const a2 = useRef(new Animated.Value(0.25)).current;
+  const a3 = useRef(new Animated.Value(0.25)).current;
+
+  useEffect(() => {
+    const pulse = (anim, delay) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(anim, { toValue: 1, duration: 280, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0.25, duration: 280, useNativeDriver: true }),
+        ])
+      );
+
+    const l1 = pulse(a1, 0);
+    const l2 = pulse(a2, 160);
+    const l3 = pulse(a3, 320);
+
+    l1.start();
+    l2.start();
+    l3.start();
+
+    return () => {
+      l1.stop();
+      l2.stop();
+      l3.stop();
+    };
+  }, []);
+
+  return (
+    <View style={styles.dotsRow}>
+      <Animated.Text style={[styles.dot, { opacity: a1 }]}>•</Animated.Text>
+      <Animated.Text style={[styles.dot, { opacity: a2 }]}>•</Animated.Text>
+      <Animated.Text style={[styles.dot, { opacity: a3 }]}>•</Animated.Text>
+    </View>
+  );
+}
+
 // --- Configurar comportamiento de notificaciones solo si NO es Expo Go ---
 if (Constants.executionEnvironment !== 'storeClient') {
   Notifications.setNotificationHandler({
@@ -147,6 +188,12 @@ export default function Test({ navigation }) {
   const [resultado, setResultado] = useState(null);
   const progresoAnim = useRef(new Animated.Value(0)).current;
 
+  // ✅ Modal flotante
+  const [showConfigModal, setShowConfigModal] = useState(false);
+
+  // ✅ Para evitar doble toque
+  const [isConfiguring, setIsConfiguring] = useState(false);
+
   // Configurar notificaciones solo fuera de Expo Go
   useEffect(() => {
     if (Constants.executionEnvironment === 'storeClient') return;
@@ -165,6 +212,7 @@ export default function Test({ navigation }) {
         importance: Notifications.AndroidImportance.MAX,
       });
     };
+
     configurarNotificaciones();
   }, []);
 
@@ -201,7 +249,8 @@ export default function Test({ navigation }) {
       nivel = 'LEVE';
       color = '#34D399';
       fondo = ['#FDE68A', '#C4B5FD'];
-      consejo = 'Tu ansiedad está bajo control. Mantén hábitos saludables y cuida tu bienestar emocional.';
+      consejo =
+        'Tu ansiedad está bajo control. Mantén hábitos saludables y cuida tu bienestar emocional.';
     } else if (total <= 20) {
       nivel = 'MODERADO';
       color = '#7C3AED';
@@ -217,12 +266,17 @@ export default function Test({ navigation }) {
     setResultado({ total, nivel, color, fondo, consejo });
   };
 
+  // ✅ MODIFICADO: modal + loader + 7s + evita doble toque
   const iniciarMonitoreo = async () => {
+    if (isConfiguring) return;
+
     try {
+      setIsConfiguring(true);
+      setShowConfigModal(true);
+
       const hoy = new Date().toISOString();
       await AsyncStorage.setItem('startDate', hoy);
 
-      // Solo programa notificaciones si no estás en Expo Go
       if (Constants.executionEnvironment !== 'storeClient') {
         const trigger = new Date(Date.now() + 24 * 60 * 60 * 1000);
         await Notifications.scheduleNotificationAsync({
@@ -234,9 +288,16 @@ export default function Test({ navigation }) {
         });
       }
 
-      navigation.navigate('Anxiosimetro');
+      // ✅ Espera 7s (7000 ms)
+      setTimeout(() => {
+        setShowConfigModal(false);
+        setIsConfiguring(false);
+        navigation.navigate('Anxiosimetro');
+      }, 7000);
     } catch (error) {
       console.log('Error al iniciar monitoreo:', error);
+      setShowConfigModal(false);
+      setIsConfiguring(false);
     }
   };
 
@@ -250,29 +311,71 @@ export default function Test({ navigation }) {
     return (
       <LinearGradient colors={resultado.fondo} style={styles.resultContainer}>
         <SafeAreaView style={{ alignItems: 'center' }}>
+          {/* ✅ MODAL FLOTANTE MÁS GRANDE + LOADER */}
+          <Modal transparent visible={showConfigModal} animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalCard}>
+                <Text style={styles.modalTitle}>Configurando…</Text>
+
+                <Text style={styles.modalText}>
+                  Estamos configurando la app de acuerdo a tus necesidades.
+                </Text>
+
+                <Text style={[styles.modalText, { marginTop: 6 }]}>
+                  Espera un momento 💜
+                </Text>
+
+                <DotLoader />
+
+                <Text style={styles.modalHint}>
+                  Esto puede tardar unos segundos…
+                </Text>
+              </View>
+            </View>
+          </Modal>
+
           <View style={styles.resultBox}>
             <Text style={styles.resultTitle}>Resultado</Text>
-            <Text style={[styles.levelHighlight, { color: resultado.color }]}>{resultado.nivel}</Text>
-            <Text style={[styles.scoreText, { color: resultado.color }]}>{resultado.total} / 30</Text>
-            {resultado.consejo ? <Text style={styles.consejo}>{resultado.consejo}</Text> : null}
+            <Text style={[styles.levelHighlight, { color: resultado.color }]}>
+              {resultado.nivel}
+            </Text>
+            <Text style={[styles.scoreText, { color: resultado.color }]}>
+              {resultado.total} / 30
+            </Text>
+            {resultado.consejo ? (
+              <Text style={styles.consejo}>{resultado.consejo}</Text>
+            ) : null}
 
-            <TouchableOpacity style={styles.monitorButton} onPress={iniciarMonitoreo}>
+            <TouchableOpacity
+              style={styles.monitorButton}
+              onPress={iniciarMonitoreo}
+              activeOpacity={0.85}
+              disabled={isConfiguring}
+            >
               <Text style={styles.monitorText}>Iniciar Monitoreo</Text>
             </TouchableOpacity>
           </View>
 
-        
           {resultado.nivel === 'LEVE' && (
-              <ConfettiCannon count={150} origin={{ x: 200, y: 0 }} fadeOut={true} autoStart={true} />
+            <ConfettiCannon
+              count={150}
+              origin={{ x: 200, y: 0 }}
+              fadeOut={true}
+              autoStart={true}
+            />
           )}
 
           {resultado.nivel === 'MODERADO' && <NeutralFaces />}
 
           {resultado.nivel === 'ALTO' && <CryingFaces />}
 
-
           {resultado.nivel === 'LEVE' && (
-            <ConfettiCannon count={150} origin={{ x: 200, y: 0 }} fadeOut={true} autoStart={true} />
+            <ConfettiCannon
+              count={150}
+              origin={{ x: 200, y: 0 }}
+              fadeOut={true}
+              autoStart={true}
+            />
           )}
         </SafeAreaView>
       </LinearGradient>
@@ -302,7 +405,10 @@ export default function Test({ navigation }) {
             data={opciones}
             keyExtractor={(item) => item.label}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.optionButton} onPress={() => seleccionarOpcion(item.valor)}>
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() => seleccionarOpcion(item.valor)}
+              >
                 <Text style={styles.optionText}>{item.label}</Text>
               </TouchableOpacity>
             )}
@@ -362,6 +468,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionText: { fontSize: 16, color: '#4C1D95', fontWeight: '600' },
+
   resultContainer: { flex: 1, justifyContent: 'center' },
   resultBox: {
     backgroundColor: '#EDE9FE',
@@ -401,4 +508,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   monitorText: { color: 'white', fontWeight: '600', fontSize: 16 },
+
+  // ✅ MODAL MÁS GRANDE
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.40)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: 'white',
+    borderRadius: 22,
+    paddingVertical: 28,
+    paddingHorizontal: 22,
+    width: '95%',          // más grande
+    maxWidth: 520,         // más grande
+    minHeight: 220,        // más alto
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#4C1D95',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 15,
+    color: '#374151',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+
+  // ✅ DOT LOADER
+  dotsRow: {
+    flexDirection: 'row',
+    marginTop: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dot: {
+    fontSize: 42,
+    marginHorizontal: 6,
+    color: '#7C3AED',
+    fontWeight: '900',
+  },
 });

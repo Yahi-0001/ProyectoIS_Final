@@ -33,9 +33,9 @@ export default function Anxiosimetro({ navigation, route }) {
   const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
 
   const NAV_ITEM_W = SCREEN_WIDTH * 0.22;
-  const CARD_W = Math.min(SCREEN_WIDTH - 40, 430); // mantiene look, pero evita que en tablets quede enorme
-  const IMAGE_SIZE = clamp(SCREEN_WIDTH * 0.45, 150, 190); // se ve igual pero escala
-  const BAR_H = clamp(SCREEN_WIDTH * 0.13, 50, 58); // ~55 promedio
+  const CARD_W = Math.min(SCREEN_WIDTH - 40, 430);
+  const IMAGE_SIZE = clamp(SCREEN_WIDTH * 0.45, 150, 190);
+  const BAR_H = clamp(SCREEN_WIDTH * 0.13, 50, 58);
   const BAR_TRIANGLE_H = BAR_H;
 
   const [tiempo, setTiempo] = useState({
@@ -138,7 +138,6 @@ export default function Anxiosimetro({ navigation, route }) {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: when,
         },
-
       });
 
       ids.push(id);
@@ -164,7 +163,6 @@ export default function Anxiosimetro({ navigation, route }) {
       const fechaInicio = await AsyncStorage.getItem('inicioAnsiedad');
 
       if (fechaInicio) {
-
         await scheduleCongratsForDays(fechaInicio, 30);
         startMonitoring(fechaInicio);
         return;
@@ -174,7 +172,6 @@ export default function Anxiosimetro({ navigation, route }) {
         const now = new Date().toISOString();
         await AsyncStorage.setItem('inicioAnsiedad', now);
 
-        // ✅ programo felicitaciones
         await scheduleCongratsForDays(now, 30);
 
         startMonitoring(now);
@@ -247,7 +244,7 @@ export default function Anxiosimetro({ navigation, route }) {
   return (
     <LinearGradient colors={['#f3e8ff', '#faf5ff']} style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        {/* NAV BAR */}
+        {/* NAV BAR (queda fija arriba) */}
         <View style={styles.navBar}>
           {[
             ['stats-chart-outline', 'Anxiósometro'],
@@ -277,8 +274,12 @@ export default function Anxiosimetro({ navigation, route }) {
           ))}
         </View>
 
-        {/* CONTENIDO */}
-        <View style={styles.content}>
+        {/* ✅ AHORA TODO ES SCROLL VERTICAL */}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={styles.title}>He estado sin ansiedad:</Text>
 
           {[
@@ -288,12 +289,7 @@ export default function Anxiosimetro({ navigation, route }) {
             ['#F9A8D4', 'segundos'],
           ].map(([color, label], i) => {
             const widths = [diaWidth, horWidth, minWidth, secWidth];
-            const values = [
-              tiempo.dias,
-              tiempo.horas,
-              tiempo.minutos,
-              tiempo.segundos,
-            ];
+            const values = [tiempo.dias, tiempo.horas, tiempo.minutos, tiempo.segundos];
 
             return (
               <View key={i} style={[styles.barContainer, { height: BAR_H }]}>
@@ -303,7 +299,12 @@ export default function Anxiosimetro({ navigation, route }) {
                     { width: widths[i], backgroundColor: color },
                   ]}
                 >
-                  <View style={[styles.triangle, { borderLeftColor: color, borderBottomWidth: BAR_TRIANGLE_H }]} />
+                  <View
+                    style={[
+                      styles.triangle,
+                      { borderLeftColor: color, borderBottomWidth: BAR_TRIANGLE_H },
+                    ]}
+                  />
                 </Animated.View>
 
                 <Text style={styles.barText}>
@@ -313,6 +314,7 @@ export default function Anxiosimetro({ navigation, route }) {
             );
           })}
 
+          {/* Tu carrusel horizontal se queda igual */}
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
             <View style={[styles.whiteCard, { width: CARD_W }]}>
               <Image
@@ -336,7 +338,6 @@ export default function Anxiosimetro({ navigation, route }) {
                   <TouchableOpacity
                     style={styles.monitorButton}
                     onPress={async () => {
-
                       const now = new Date().toISOString();
                       await AsyncStorage.setItem('inicioAnsiedad', now);
 
@@ -376,7 +377,7 @@ export default function Anxiosimetro({ navigation, route }) {
               </View>
             </View>
           </ScrollView>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -395,7 +396,6 @@ const styles = StyleSheet.create({
 
   navItem: {
     alignItems: 'center',
-    // width: SCREEN_WIDTH * 0.22, // ahora es dinámico en el render
   },
 
   navLabelActive: {
@@ -405,10 +405,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  content: {
-    flex: 1,
+  // ✅ Nuevo: estilo para el ScrollView vertical
+  scrollContent: {
     alignItems: 'center',
     padding: 10,
+    paddingBottom: 30, // para que no se corte abajo
     marginTop: 10,
   },
 
@@ -421,7 +422,6 @@ const styles = StyleSheet.create({
 
   barContainer: {
     width: '90%',
-    // height: 55, // ahora es dinámico en el render
     backgroundColor: '#9ea1a5ff',
     borderRadius: 14,
     marginVertical: 6,
@@ -450,7 +450,6 @@ const styles = StyleSheet.create({
     right: -9,
     width: 0,
     height: '100%',
-    // borderBottomWidth: 55, // ahora es dinámico en el render
     borderLeftWidth: 10,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
@@ -458,17 +457,15 @@ const styles = StyleSheet.create({
 
   whiteCard: {
     backgroundColor: 'white',
-    // width: SCREEN_WIDTH - 40, // ahora es dinámico en el render
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 10,
     alignItems: 'center',
     elevation: 6,
+    marginBottom: 14, // para que el scroll tenga aire
   },
 
   image: {
-    // width: 180,
-    // height: 180, // ahora es dinámico en el render
     marginVertical: 10,
     borderRadius: 12,
   },
