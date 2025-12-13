@@ -34,8 +34,8 @@ import * as Notifications from "expo-notifications";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 //importamos la base de datos
-import { signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { deleteUser, signOut } from "firebase/auth";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebaseConfig";
 
 
@@ -295,6 +295,63 @@ const rotateConfigChevron = configRotateAnim.interpolate({
       console.log("Error al cerrar sesión:", error);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    Alert.alert(
+      "Eliminar cuenta",
+      "¿Estás segura de que deseas eliminar tu cuenta? Esto es irreversible.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "usuarios", user.uid));
+              await deleteUser(user);
+
+              setName("");
+              setEmail("");
+              setPhone("");
+
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
+
+              Alert.alert("Cuenta eliminada", "Tu cuenta ha sido eliminada correctamente.");
+            } catch (error) {
+              console.log("Error al eliminar cuenta:", error);
+              if (error.code === "auth/requires-recent-login") {
+                Alert.alert(
+                  "Sesión expirada",
+                  "Para eliminar la cuenta, vuelve a iniciar sesión primero.",
+                  [
+                    {
+                      text: "Ir al login",
+                      onPress: async () => {
+                        await signOut(auth);
+                        navigation.reset({
+                          index: 0,
+                          routes: [{ name: "Login" }],
+                        });
+                      },
+                    },
+                  ]
+                );
+              } else {
+                Alert.alert("Error", error.message);
+              }
+            }
+          },
+        },
+      ]
+    );
+  };
+
 
 
   return (
@@ -744,7 +801,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
 
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => navigation.navigate("EliminarCuenta")}
+                onPress={handleDeleteAccount} 
               >
                 <View style={[styles.iconBubble, { backgroundColor: "#fee2e2" }]}>
                   <Ionicons name="warning-outline" size={18} color="#DC2626" />
