@@ -181,16 +181,14 @@ para obtener apoyo inmediato cuando me siento mal.
 **Story Points:** 2  
 
 ---
-### **HU-11 – Creación de base de datos local**  
+### **HU-11 – Creación de base de datos en la nube**  
  
 
 **Como usuario**,  
-quiero que la app tenga una base de datos local,  
-para que pueda guardar y consultar información sin depender de internet.
+quiero que la app tenga una base de datos en la nube,  
+para que pueda guardar y consultar información.
 
 **Criterios de aceptación:**  
-- La app crea automáticamente la base de datos al abrirse por primera vez.  
-- Funciona completamente sin conexión.  
 - Se almacena solo la información necesaria (sin datos sensibles).  
 - Permite guardar ejercicios, frases calmantes y registros necesarios para la app.  
 

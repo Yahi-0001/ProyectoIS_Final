@@ -8,7 +8,7 @@ Terminar la implementación de la base de datos, terminar las historias de usuar
 - **HU-13 – Actualización general de la app para mejorar la experiencia del usuario**  
   Story Points: 3
 
-- **HU-11 – Creación de base de datos local**  
+- **HU-11 – Creación de base de datos**  
   Story Points: 5
 
 **Total Story Points:** 8
