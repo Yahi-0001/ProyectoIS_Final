@@ -1,7 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+
 import {
   Alert,
+  Animated,
   Dimensions,
+  Linking,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -10,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
@@ -54,6 +58,44 @@ export default function ProfileScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [language, setLanguage] = useState("es");
+
+  // Centro de ayuda 
+  const [showHelp, setShowHelp] = useState(false);
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  // Confi
+  const [showConfig, setShowConfig] = useState(false);
+  const configRotateAnim = useRef(new Animated.Value(0)).current;
+
+  const toggleConfig = () => {
+  Animated.timing(configRotateAnim, {
+    toValue: showConfig ? 0 : 1,
+    duration: 220,
+    useNativeDriver: true,
+  }).start();
+
+  setShowConfig(!showConfig);
+};
+
+const rotateConfigChevron = configRotateAnim.interpolate({
+  inputRange: [0, 1],
+  outputRange: ["0deg", "180deg"],
+});
+
+
+  const toggleHelp = () => {
+    Animated.timing(rotateAnim, {
+      toValue: showHelp ? 0 : 1,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+    setShowHelp(!showHelp);
+  };
+
+  const rotateChevron = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
 
 
   // NAV: Perfil activo
@@ -236,12 +278,12 @@ export default function ProfileScreen({ navigation }) {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3e8ff" }}>
       <LinearGradient colors={["#faf5ff", "#f3e8ff"]} style={{ flex: 1 }}>
         <View style={styles.screen}>
-          {/* ✅ NAV BAR ARRIBA y FUERA del ScrollView (para que no se pegue a la batería) */}
+          {/* NAV BAR ARRIBA y FUERA del ScrollView (para que no se pegue a la batería) */}
           <View
             style={[
               styles.navBar,
               {
-                paddingTop: insets.top + 10, // ✅ respeta status bar
+                paddingTop: insets.top + 10, 
               },
             ]}
           >
@@ -333,7 +375,7 @@ export default function ProfileScreen({ navigation }) {
               </LinearGradient>
             </View>
 
-            {/* ✅ BOTÓN: HICE UNA SESIÓN */}
+            {/* BOTÓN: HICE UNA SESIÓN */}
             <TouchableOpacity onPress={addSession} style={styles.sessionButton}>
               <Text style={styles.sessionButtonText}>Hice una sesión 🎧</Text>
             </TouchableOpacity>
@@ -523,7 +565,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
             </LinearGradient>
 
-            {/* MÁS OPCIONES */}
+           
             <LinearGradient
               colors={["#eef2ff", "#fef9c3"]}
               start={{ x: 0, y: 0 }}
@@ -533,40 +575,149 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.sectionTitle}>Más opciones ⚙️</Text>
 
               <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => navigation.navigate("Configuracion")}
-              >
-                <View style={[styles.iconBubble, { backgroundColor: "#e0f2fe" }]}>
-                  <Ionicons name="settings-sharp" size={18} color="#1D4ED8" />
-                </View>
-                <Text style={styles.menuText}>Configuración</Text>
-                <Entypo
-                  name="chevron-right"
-                  size={20}
-                  color="#6B7280"
-                  style={{ marginLeft: "auto" }}
-                />
-              </TouchableOpacity>
+  style={styles.menuItem}
+  onPress={toggleConfig}
 
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => navigation.navigate("Ayuda")}
-              >
-                <View style={[styles.iconBubble, { backgroundColor: "#fef3c7" }]}>
-                  <Ionicons
-                    name="help-circle-outline"
-                    size={18}
-                    color="#B45309"
-                  />
-                </View>
-                <Text style={styles.menuText}>Centro de ayuda</Text>
-                <Entypo
-                  name="chevron-right"
-                  size={20}
-                  color="#6B7280"
-                  style={{ marginLeft: "auto" }}
-                />
-              </TouchableOpacity>
+>
+  <View style={[styles.iconBubble, { backgroundColor: "#e0f2fe" }]}>
+    <Ionicons name="settings-sharp" size={18} color="#1D4ED8" />
+  </View>
+
+  <Text style={styles.menuText}>Configuración</Text>
+
+  <Animated.View
+  style={{
+    marginLeft: "auto",
+    transform: [{ rotate: rotateConfigChevron }],
+  }}
+>
+  <Entypo name="chevron-down" size={22} color="#6B7280" />
+</Animated.View>
+
+</TouchableOpacity>
+
+{showConfig && (
+  <View style={styles.helpContainer}>
+    <Text style={styles.helpQuestion}>Privacidad</Text>
+
+    <Text style={styles.helpAnswer}>
+      🔒Tus datos se guardan solo en tu dispositivo.
+    </Text>
+    <Text style={styles.helpAnswer}></Text>
+    <Text style={styles.helpAnswer}>
+      🔒No compartimos información con terceros.
+
+    </Text>
+      <Text style={styles.helpAnswer}></Text>
+    <Text style={styles.helpAnswer}>
+      🔒Puedes borrar toda tu información cuando desees.
+    </Text>
+
+    <View style={{ marginTop: 12 }}>
+      <Text style={styles.helpQuestion}>Información</Text>
+      <Text style={styles.helpAnswer}>Anxiously</Text>
+      <Text style={styles.helpAnswer}>Versión 2.0.0</Text>
+      <Text style={styles.helpAnswer}> </Text>
+      <Text style={styles.helpAnswer}>Esta app fue creada con cariño para acompañarte, no para exigirte.</Text>
+    </View>
+  </View>
+)}
+
+
+             <TouchableOpacity style={styles.menuItem} onPress={toggleHelp}>
+  <View style={[styles.iconBubble, { backgroundColor: "#fef3c7" }]}>
+    <Ionicons
+      name="help-circle-outline"
+      size={18}
+      color="#B45309"
+    />
+  </View>
+
+  <Text style={styles.menuText}>Centro de ayuda</Text>
+
+  <Animated.View
+    style={{
+      marginLeft: "auto",
+      transform: [{ rotate: rotateChevron }],
+    }}
+  >
+    <Entypo name="chevron-down" size={22} color="#6B7280" />
+  </Animated.View>
+</TouchableOpacity>
+
+{showHelp && (
+  <View style={styles.helpContainer}>
+    <Text style={styles.helpQuestion}>¿Cómo reinicio el contador?</Text>
+    <Text style={styles.helpAnswer}>
+      Puedes reiniciar el contador desde el botón de apoyo en la pantalla
+      principal. El tiempo comenzará nuevamente desde cero.
+    </Text>
+
+    <Text style={styles.helpQuestion}>¿Por qué no me llegan felicitaciones?</Text>
+    <Text style={styles.helpAnswer}>
+      Revisa que las notificaciones estén activadas y que el modo ahorro
+      de batería no esté bloqueando la app.
+    </Text>
+
+    <Text style={styles.helpQuestion}>¿Qué pasa si cambio de celular?</Text>
+    <Text style={styles.helpAnswer}>
+      Los datos se guardan localmente en tu dispositivo. Al cambiar de
+      celular o desinstalar la app, el contador se reiniciará.
+    </Text>
+
+    <Text style={styles.helpQuestion}>¿Cómo funciona el calendario?</Text>
+    <Text style={styles.helpAnswer}>
+      El calendario muestra de forma visual los días que has avanzado y
+      tu seguimiento.
+    </Text>
+
+    <Text style={styles.helpQuestion}>
+      ¿Puedo volver a hacer el test de personalidad?
+    </Text>
+    <Text style={styles.helpAnswer}>
+      No. Solo se puede responder una sola vez, mas adelante haremos mejoras para descubrir como va cambiando tu personalidad.
+    </Text>
+
+    <View style={styles.crisisBox}>
+      <Text style={styles.crisisTitle}>
+        Si te sientes en riesgo o necesitas apoyo....
+      </Text>
+
+      <Text style={styles.helpAnswer}>
+        Si estás pasando por un momento muy difícil o necesitas hablar con
+        alguien profesional, hay apoyo gratuito y confidencial. 
+        Atención las 24 horas, los 365 días del año.
+      </Text>
+
+      <Text style={styles.crisisPhone}>
+        📞 Línea de intervención en crisis psicológicas (Veracruz)
+      </Text>
+
+      <TouchableOpacity onPress={() => Linking.openURL("tel:8002603100")}>
+        <Text style={styles.crisisNumber}>800 260 3100</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => Linking.openURL("tel:2288144465")}>
+          <Text style={styles.crisisNumber}>228 814 4465</Text>
+          </TouchableOpacity>
+
+
+      <Text style={[styles.crisisPhone, { marginTop: 6 }]}>
+        📞 Línea de la Vida (México)
+      </Text>
+      
+      <TouchableOpacity onPress={() => Linking.openURL("tel:8009112000")}>
+          <Text style={styles.crisisNumber}>800 911 2000</Text>
+          </TouchableOpacity>
+
+      <Text style={styles.crisisFooter}>
+        No tienes que pasar por esto sola 🤍
+      </Text>
+    </View>
+  </View>
+)}
+
+
+
 
               <TouchableOpacity
                 style={styles.menuItem}
@@ -608,7 +759,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
 
-  // ✅ NAV BAR IGUAL A LA DE anxiosimetro.js
+
   navBar: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -899,4 +1050,63 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  helpContainer: {
+  backgroundColor: "#FFFFFF",
+  borderRadius: 18,
+  padding: 14,
+  marginTop: 8,
+},
+
+helpQuestion: {
+  fontSize: 14,
+  fontWeight: "600",
+  color: "#6540a1ff",
+  marginTop: 10,
+},
+
+helpAnswer: {
+  fontSize: 13,
+  color: "#434d5cff",
+  lineHeight: 18,
+},
+
+crisisBox: {
+  marginTop: 16,
+  borderTopWidth: 1,
+  borderTopColor: "#E5E7EB",
+  paddingTop: 10,
+},
+
+crisisTitle: {
+  fontSize: 15,
+  fontWeight: "700",
+  color: "#991B1B",
+  marginBottom: 6,
+},
+
+crisisPhone: {
+  fontSize: 13,
+  fontWeight: "600",
+  color: "#7F1D1D",
+  marginTop: 6,
+},
+
+crisisNumber: {
+  fontSize: 14,
+  fontWeight: "700",
+  color: "#111827",
+  textDecorationLine: "underline",
+},
+
+
+crisisFooter: {
+  fontSize: 12,
+  marginTop: 8,
+  color: "#374151",
+},
+
+
+
+
 });
