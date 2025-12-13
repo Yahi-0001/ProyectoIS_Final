@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Provider as PaperProvider } from 'react-native-paper';
 
 
+
 import Anxiosimetro from './screens/anxiosimetro';
 import Autoabrazo from "./screens/Autoabrazo";
 import Calendario from './screens/calendario';

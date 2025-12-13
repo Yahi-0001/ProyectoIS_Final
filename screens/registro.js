@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 //importamos la base de datos
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from '../config/firebaseConfig';
 
@@ -69,16 +69,18 @@ export default function Registro({ navigation }) {
         createdAt: new Date(),
       });
 
+
+      //  CERRAR SESIÓN INMEDIATAMENTE
+      await signOut(auth);
+
+      //  NO PASA POR TEST
+      navigation.replace('Login', { email: correo });
+
       Alert.alert(
         'Registro exitoso 🎉',
-        'Te has registrado correctamente',
-        [
-          {
-            text: 'Ir al Login',
-            onPress: () => navigation.replace('Login', { email: correo }),
-          }
-        ]
+        'Te has registrado correctamente, ahora inicia sesión 💜'
       );
+
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
         Alert.alert(

@@ -34,8 +34,10 @@ import * as Notifications from "expo-notifications";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 //importamos la base de datos
+import { signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebaseConfig";
+
 
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -273,6 +275,27 @@ const rotateConfigChevron = configRotateAnim.interpolate({
       console.log("Error cargando perfil:", error);
     }
   };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // cierra sesión en Firebase
+
+      // Opcional: limpiar estados locales
+      setName("");
+      setEmail("");
+      setPhone("");
+
+      // Navegar y borrar historial
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    } catch (error) {
+      Alert.alert("Error", "No se pudo cerrar sesión");
+      console.log("Error al cerrar sesión:", error);
+    }
+  };
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3e8ff" }}>
@@ -733,7 +756,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
 
               <TouchableOpacity
                 style={[styles.menuItem, { marginTop: 6 }]}
-                onPress={() => navigation.navigate("Login")}
+                onPress={handleLogout}
               >
                 <View style={[styles.iconBubble, { backgroundColor: "#e5e7eb" }]}>
                   <Ionicons name="log-out-outline" size={18} color="#111827" />
