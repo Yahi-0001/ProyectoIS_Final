@@ -18,8 +18,6 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from '../config/firebaseConfig';
 
-
-
 export default function Registro({ navigation }) {
   const [correo, setCorreo] = useState('');
   const [pais, setPais] = useState('Mexico');
@@ -32,8 +30,16 @@ export default function Registro({ navigation }) {
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
 
+  // ✅ NUEVO: nombre y apellidos
+  const [nombre, setNombre] = useState('');
+  const [apellidos, setApellidos] = useState('');
+
   const handleRegistro = async () => {
     let nuevosErrores = {};
+
+    // ✅ NUEVO: validaciones
+    if (!nombre) nuevosErrores.nombre = 'El nombre es obligatorio.';
+    if (!apellidos) nuevosErrores.apellidos = 'Los apellidos son obligatorios.';
 
     if (!correo) nuevosErrores.correo = 'El correo es obligatorio.';
     if (!password) nuevosErrores.password = 'La contraseña es obligatoria.';
@@ -53,6 +59,10 @@ export default function Registro({ navigation }) {
       const user = userCredential.user;
 
       await setDoc(doc(db, 'usuarios', user.uid), {
+        // ✅ NUEVO: guardar nombre y apellidos
+        nombre,
+        apellidos,
+
         correo,
         pais,
         telefono,
@@ -103,7 +113,6 @@ export default function Registro({ navigation }) {
     }
   };
 
-
   return (
     <LinearGradient colors={['#ffffffff', '#ffffffff']} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -127,6 +136,28 @@ export default function Registro({ navigation }) {
         <View style={styles.bottomWhiteContainer}>
           <View style={styles.container}>
             <Text style={styles.title}>Regístrate a Anxiously</Text>
+
+            {/* ✅ NUEVO: Nombre */}
+            <Text style={styles.label}>Ingresa tu nombre</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre"
+              placeholderTextColor="#999"
+              value={nombre}
+              onChangeText={setNombre}
+            />
+            {errores.nombre && <Text style={styles.error}>{errores.nombre}</Text>}
+
+            {/* ✅ NUEVO: Apellidos */}
+            <Text style={styles.label}>Ingresa tus apellidos</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Apellidos"
+              placeholderTextColor="#999"
+              value={apellidos}
+              onChangeText={setApellidos}
+            />
+            {errores.apellidos && <Text style={styles.error}>{errores.apellidos}</Text>}
 
             {/* Correo */}
             <Text style={styles.label}>Ingresa tu correo electrónico</Text>
@@ -294,23 +325,22 @@ const styles = StyleSheet.create({
   },
 
   loginButton: {
-    position: 'absolute', // posición flotante
-    top: 15,              // distancia desde la parte superior
-    left: 15,             // ahora a la izquierda
+    position: 'absolute',
+    top: 15,
+    left: 15,
     backgroundColor: '#7C3AED',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
-    zIndex: 10,           // asegurarse que quede encima de la imagen
-    elevation: 5,         // para Android
-},
+    zIndex: 10,
+    elevation: 5,
+  },
 
-loginText: {
-  color: 'white',
-  fontWeight: '600',
-  fontSize: 14,
-},
-
+  loginText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
 
   inputPassword: { flex: 1, paddingVertical: 12, paddingRight: 10 },
 
@@ -324,4 +354,3 @@ loginText: {
   gradientButton: { width: '100%', paddingVertical: 14, borderRadius: 30, alignItems: 'center' },
   buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
 });
-
