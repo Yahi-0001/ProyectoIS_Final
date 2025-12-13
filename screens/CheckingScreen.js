@@ -12,7 +12,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+
+const TEST_REMINDER_DATE_KEY = "testDiarioReminderDate";
+const TEST_REMINDER_1120_KEY = "testDiarioReminder_1120";
+const TEST_REMINDER_1900_KEY = "testDiarioReminder_1900";
 
 const ejerciciosIniciales = [
   {
@@ -50,8 +68,8 @@ const imagenInfoAnsiedad = require("../assets/ansiedad.jpg");
 
 const imagenesEjercicios = {
   1: require("../assets/respracion.gif"), // Respiración 4-7-8
-  2: require("../assets/corporal.png"),   // Escaneo corporal
-  3: require("../assets/sentidos.jpg"),   // Anclaje con los sentidos
+  2: require("../assets/corporal.png"), // Escaneo corporal
+  3: require("../assets/sentidos.jpg"), // Anclaje con los sentidos
   5: require("../assets/autoabrazo.jpg"), // Autoabrazo consciente
 };
 
@@ -62,14 +80,105 @@ export default function CheckingScreen({ navigation }) {
   const [hiddenMap, setHiddenMap] = useState({}); // { [id]: hiddenUntilISO }
   const [testRealizadoHoy, setTestRealizadoHoy] = useState(false);
   const [testPersonalidadHecho, setTestPersonalidadHecho] = useState(false);
-  const [resultadoPersonalidad, setResultadoPersonalidad] = useState(null); // 👈 NUEVO
+  const [resultadoPersonalidad, setResultadoPersonalidad] = useState(null);
 
-  // NUEVO: controla si hoy ya se puede hacer el test (después de las 11:20)
+  // controla si hoy ya se puede hacer el test (después de las 11:20)
   const [puedeHacerTestHoy, setPuedeHacerTestHoy] = useState(false);
 
   useEffect(() => {
     cargarEstado();
   }, []);
+
+
+  const ensureNotifPermission = async () => {
+    // En emulador a veces no funcionan bien.
+    if (!Device.isDevice) return false;
+
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === "granted") return true;
+
+    const req = await Notifications.requestPermissionsAsync();
+    return req.status === "granted";
+  };
+
+  const cancelTestReminders = async () => {
+    const id1120 = await AsyncStorage.getItem(TEST_REMINDER_1120_KEY);
+    const id1900 = await AsyncStorage.getItem(TEST_REMINDER_1900_KEY);
+
+    if (id1120) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(id1120);
+      } catch (e) {}
+    }
+    if (id1900) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(id1900);
+      } catch (e) {}
+    }
+
+    await AsyncStorage.multiRemove([
+      TEST_REMINDER_1120_KEY,
+      TEST_REMINDER_1900_KEY,
+      TEST_REMINDER_DATE_KEY,
+    ]);
+  };
+
+  const scheduleTestRemindersIfNeeded = async (hechoHoy) => {
+    // Si ya lo hizo hoy, cancelamos cualquier recordatorio pendiente.
+    if (hechoHoy) {
+      await cancelTestReminders();
+      return;
+    }
+
+    const ok = await ensureNotifPermission();
+    if (!ok) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const already = await AsyncStorage.getItem(TEST_REMINDER_DATE_KEY);
+
+
+    if (already === today) return;
+
+    const now = new Date();
+
+    const makeDate = (h, m) => {
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+
+
+      if (now > d) d.setSeconds(d.getSeconds() + 5);
+      return d;
+    };
+
+    const date1120 = makeDate(11, 20);
+    const date1900 = makeDate(19, 0);
+
+    const id1120 = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Test diario disponible 💜",
+        body: "No olvides responder tu test diario. Te tomará solo un minuto ✨",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: date1120,
+      },
+    });
+
+    const id1900 = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "¿Ya hiciste tu test diario? 💭",
+        body: "Aún estás a tiempo de registrar cómo te sentiste hoy 💜",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: date1900,
+      },
+    });
+
+    await AsyncStorage.setItem(TEST_REMINDER_1120_KEY, id1120);
+    await AsyncStorage.setItem(TEST_REMINDER_1900_KEY, id1900);
+    await AsyncStorage.setItem(TEST_REMINDER_DATE_KEY, today);
+  };
 
   const cargarEstado = async () => {
     try {
@@ -105,6 +214,9 @@ export default function CheckingScreen({ navigation }) {
       // ¿ya se hizo el test hoy?
       const hechoHoy = storedFechaTest === hoyStr;
       setTestRealizadoHoy(hechoHoy);
+
+      //programar notis del test (11:20 y 19:00) si no lo ha hecho hoy
+      await scheduleTestRemindersIfNeeded(hechoHoy);
 
       // ¿ya pasaron las 11:20 am?
       const hora = ahora.getHours(); // 0-23
@@ -153,7 +265,6 @@ export default function CheckingScreen({ navigation }) {
       );
 
       setHiddenMap(map);
-      // Niñas, aca agreguen para navegar a las pantallas, tqm
 
       if (item.id === 1) {
         navigation.navigate("Respiracion");
@@ -179,7 +290,6 @@ export default function CheckingScreen({ navigation }) {
   };
 
   const handleTestDiario = async () => {
-    // si ya lo hiciste hoy o todavía no es hora, no hace nada
     if (testRealizadoHoy || !puedeHacerTestHoy) {
       return;
     }
@@ -187,8 +297,12 @@ export default function CheckingScreen({ navigation }) {
     try {
       const hoyStr = new Date().toISOString().slice(0, 10);
       await AsyncStorage.setItem("ultimaFechaTest", hoyStr);
+
+
+      await cancelTestReminders();
+
       setTestRealizadoHoy(true);
-      setPuedeHacerTestHoy(false); // ya no se puede después de hacerlo
+      setPuedeHacerTestHoy(false);
       navigation.navigate("TestDiario");
     } catch (e) {
       console.log("Error guardando test diario:", e);
@@ -197,23 +311,20 @@ export default function CheckingScreen({ navigation }) {
 
   // TEST PERSONALIDAD ------------------------------------------------
   const handleTestPersonalidad = async () => {
-  try {
-    const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
+    try {
+      const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
 
-    if (testYaHecho === "SI" || testPersonalidadHecho) {
-      setTestPersonalidadHecho(true);
-      alert("Ya completaste este test 💜");
-      return;
+      if (testYaHecho === "SI" || testPersonalidadHecho) {
+        setTestPersonalidadHecho(true);
+        alert("Ya completaste este test 💜");
+        return;
+      }
+
+      navigation.navigate("TestPersonalidad");
+    } catch (error) {
+      console.log("Error revisando test personalidad:", error);
     }
-
-    // Primera vez: solo navegamos. El guardado se hará en el test.
-    navigation.navigate("TestPersonalidad");
-  } catch (error) {
-    console.log("Error revisando test personalidad:", error);
-  }
-};
-
-  // --------------------------------------------------------------
+  };
 
   const handleLeerAnsiedad = () => {
     navigation.navigate("PantallaRapida");
@@ -277,7 +388,6 @@ export default function CheckingScreen({ navigation }) {
 
           {/* PRIORIDAD: TEST DIARIO */}
           <View style={styles.priorityCard}>
-            {/* Imagen del test diario */}
             <View style={styles.cardImageBox}>
               <Image
                 source={imagenTestDiario}
@@ -312,42 +422,39 @@ export default function CheckingScreen({ navigation }) {
           </View>
 
           {/* SEGUNDO TEST: PERSONALIDAD */}
-<View style={styles.priorityCard}>
-  <View style={styles.cardImageBox}>
-    <Image
-      source={imagenTestPersonalidad}
-      style={styles.cardImage}
-      resizeMode="cover"
-    />
-  </View>
+          <View style={styles.priorityCard}>
+            <View style={styles.cardImageBox}>
+              <Image
+                source={imagenTestPersonalidad}
+                style={styles.cardImage}
+                resizeMode="cover"
+              />
+            </View>
 
-  <Text style={styles.priorityTitle}>Descubre tu personalidad</Text>
-  <Text style={styles.priorityText}>
-    Un test para descubrir tu personalidad y explorar cómo actúa la ansiedad en ti.
-  </Text>
+            <Text style={styles.priorityTitle}>Descubre tu personalidad</Text>
+            <Text style={styles.priorityText}>
+              Un test para descubrir tu personalidad y explorar cómo actúa la
+              ansiedad en ti.
+            </Text>
 
-  <TouchableOpacity
-    style={[
-      styles.priorityButton,
-      testPersonalidadHecho && styles.priorityButtonDone,
-    ]}
-    onPress={handleTestPersonalidad}
-    activeOpacity={testPersonalidadHecho ? 1 : 0.9}
-  >
-    <Text style={styles.priorityButtonText}>
-      {testPersonalidadHecho
-        ? "Test completado"
-        : "Hacer test de personalidad"}
-    </Text>
-  </TouchableOpacity>
-</View>
-
-
-                  
+            <TouchableOpacity
+              style={[
+                styles.priorityButton,
+                testPersonalidadHecho && styles.priorityButtonDone,
+              ]}
+              onPress={handleTestPersonalidad}
+              activeOpacity={testPersonalidadHecho ? 1 : 0.9}
+            >
+              <Text style={styles.priorityButtonText}>
+                {testPersonalidadHecho
+                  ? "Test completado"
+                  : "Hacer test de personalidad"}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* INFO: LEER SOBRE LA ANSIEDAD */}
           <View style={styles.priorityCard}>
-            {/* Imagen info ansiedad */}
             <View style={styles.cardImageBox}>
               <Image
                 source={imagenInfoAnsiedad}
@@ -379,7 +486,6 @@ export default function CheckingScreen({ navigation }) {
           {/* LISTA DE EJERCICIOS */}
           {visibleEjercicios.map((item) => (
             <View key={item.id} style={styles.card}>
-              {/* Imagen del ejercicio */}
               <View style={styles.cardImageBox}>
                 <Image
                   source={imagenesEjercicios[item.id]}
@@ -445,12 +551,11 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
 
-  // Ajustar la misma medida para todos
   cardImageBox: {
     width: "100%",
     height: 120,
     borderRadius: 14,
-    overflow: "hidden", // para que la imagen respete el borde redondeado
+    overflow: "hidden",
     backgroundColor: "#EDE9FE",
     marginBottom: 12,
   },
@@ -459,7 +564,6 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  // PRIORIDAD (tests / info)
   priorityCard: {
     backgroundColor: "#F7EAFE",
     borderRadius: 18,
@@ -494,7 +598,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // Resultado test personalidad
   resultadoBox: {
     marginBottom: 10,
     padding: 10,

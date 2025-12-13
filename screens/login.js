@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 
-//base de datos
+//base de datos 
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 

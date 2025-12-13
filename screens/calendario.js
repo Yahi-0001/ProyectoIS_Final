@@ -167,9 +167,7 @@ export default function CalendarioEmocional({ navigation }) {
 
   const weeklyAvg =
     chartValues.length > 0
-      ? (chartValues.reduce((a, b) => a + b, 0) / chartValues.length).toFixed(
-          2
-        )
+      ? (chartValues.reduce((a, b) => a + b, 0) / chartValues.length).toFixed(2)
       : "N/A";
 
   const chartConfig = {
@@ -295,7 +293,7 @@ export default function CalendarioEmocional({ navigation }) {
     <LinearGradient colors={["#f3e8ff", "#faf5ff"]} style={styles.screen}>
       <StatusBar backgroundColor="#7C3AED" barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
-        {/* NAV BAR IGUAL A ANXIOSIMETRO */}
+        {/* NAV BAR IGUAL A ANXIOSIMETRO (pero sin saltito) */}
         <View style={styles.navBar}>
           {[
             ["stats-chart-outline", "Anxiósometro"],
@@ -320,9 +318,16 @@ export default function CalendarioEmocional({ navigation }) {
                 size={26}
                 color={activeNav === i ? "#7C3AED" : "#9CA3AF"}
               />
-              {activeNav === i && (
-                <Text style={styles.navLabelActive}>{label}</Text>
-              )}
+
+              {/* ✅ SIEMPRE está (evita brinco). Solo cambia opacidad */}
+              <Text
+                style={[
+                  styles.navLabelActive,
+                  { opacity: activeNav === i ? 1 : 0 },
+                ]}
+              >
+                {label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -472,13 +477,11 @@ export default function CalendarioEmocional({ navigation }) {
             {/* Botón PDF */}
             <View style={styles.actions}>
               <TouchableOpacity style={styles.pdfBtn} onPress={exportToPDF}>
-                <Text style={styles.pdfBtnText}>
-                  📄 Exportar reporte (PDF)
-                </Text>
+                <Text style={styles.pdfBtnText}>📄 Exportar reporte (PDF)</Text>
               </TouchableOpacity>
             </View>
 
-            {/* 🌸 Test de personalidad (AL FINAL, MÁS BONITO) */}
+            {/* 🌸 Test de personalidad */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Tu test de personalidad</Text>
 
@@ -516,22 +519,17 @@ export default function CalendarioEmocional({ navigation }) {
                     )}
                   </View>
 
-                  {/* Descripción completa */}
                   {personalityResult?.description && (
                     <Text style={styles.personalityResultDescription}>
                       {personalityResult.description}
                     </Text>
                   )}
 
-                  {/* Rasgos / palabras clave si existen */}
                   {Array.isArray(personalityResult?.traits) &&
                     personalityResult.traits.length > 0 && (
                       <View style={styles.personalityTraitsRow}>
                         {personalityResult.traits.map((t, idx) => (
-                          <View
-                            key={idx}
-                            style={styles.personalityTraitChip}
-                          >
+                          <View key={idx} style={styles.personalityTraitChip}>
                             <Text style={styles.personalityTraitChipText}>
                               {t}
                             </Text>
@@ -598,7 +596,6 @@ function DayWithEmotions({
         ]}
       >
         <View style={styles.dayInner}>
-          {/* Capa de fondo con 1 o 2 colores */}
           {hasColor && !secondColor && (
             <View
               style={[
@@ -620,7 +617,6 @@ function DayWithEmotions({
             </View>
           )}
 
-          {/* Número del día por encima */}
           <Text
             style={[
               styles.dayText,
@@ -654,6 +650,10 @@ const styles = StyleSheet.create({
   navItem: {
     alignItems: "center",
     width: screenWidth * 0.22,
+
+    // ✅ FIX: alto estable para que no brinque cuando el label aparece/desaparece
+    height: 48,
+    justifyContent: "center",
   },
   navLabelActive: {
     color: "#7C3AED",
@@ -850,3 +850,4 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 });
+

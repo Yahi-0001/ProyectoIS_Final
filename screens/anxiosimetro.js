@@ -14,7 +14,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import * as Notifications from "expo-notifications";
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const CONGRATS_IDS_KEY = "@congrats_notif_ids";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function Anxiosimetro({ navigation, route }) {
   const [tiempo, setTiempo] = useState({
@@ -54,7 +66,6 @@ export default function Anxiosimetro({ navigation, route }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Heartbeat loop boton: crecer, contraer ligeramente, volver a normal
     Animated.loop(
       Animated.sequence([
         Animated.timing(scaleAnim, { toValue: 1.12, duration: 300, useNativeDriver: true }),
@@ -70,9 +81,62 @@ export default function Anxiosimetro({ navigation, route }) {
       Animated.timing(scaleAnim, { toValue: 0.86, duration: 110, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1.12, duration: 160, useNativeDriver: true }),
     ]).start(() => {
-      // vuelvo a la animación de heartbeat (la loop ya corre)
       scaleAnim.setValue(1.0);
     });
+  };
+
+  // ---------- NOTIFICACIONES (solo felicitaciones) ----------
+  const ensureNotifPermission = async () => {
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === "granted") return true;
+
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === "granted";
+  };
+
+  const cancelCongratsScheduled = async () => {
+    try {
+      const raw = await AsyncStorage.getItem(CONGRATS_IDS_KEY);
+      const ids = raw ? JSON.parse(raw) : [];
+      for (let i = 0; i < ids.length; i++) {
+        await Notifications.cancelScheduledNotificationAsync(ids[i]);
+      }
+      await AsyncStorage.removeItem(CONGRATS_IDS_KEY);
+    } catch (e) {
+      console.log("Error cancelando felicitaciones:", e);
+    }
+  };
+
+  const scheduleCongratsForDays = async (inicioISO, daysToSchedule = 30) => {
+    const ok = await ensureNotifPermission();
+    if (!ok) return;
+
+    await cancelCongratsScheduled();
+
+    const inicio = new Date(inicioISO);
+    const ids = [];
+
+    for (let d = 1; d <= daysToSchedule; d++) {
+      const when = new Date(inicio);
+      when.setDate(when.getDate() + d);
+
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "¡Felicidades! 🎉",
+          body: `Hola, acabas de cumplir ${d} día${d === 1 ? "" : "s"} sin ansiedad 💜`,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: when,
+        },
+      
+      });
+
+
+      ids.push(id);
+    }
+
+    await AsyncStorage.setItem(CONGRATS_IDS_KEY, JSON.stringify(ids));
   };
 
   useEffect(() => {
@@ -92,6 +156,8 @@ export default function Anxiosimetro({ navigation, route }) {
       const fechaInicio = await AsyncStorage.getItem('inicioAnsiedad');
 
       if (fechaInicio) {
+
+        await scheduleCongratsForDays(fechaInicio, 30);
         startMonitoring(fechaInicio);
         return;
       }
@@ -99,6 +165,10 @@ export default function Anxiosimetro({ navigation, route }) {
       if (route?.params?.start) {
         const now = new Date().toISOString();
         await AsyncStorage.setItem('inicioAnsiedad', now);
+
+        // ✅ programo felicitaciones
+        await scheduleCongratsForDays(now, 30);
+
         startMonitoring(now);
         return;
       }
@@ -169,7 +239,6 @@ export default function Anxiosimetro({ navigation, route }) {
   return (
     <LinearGradient colors={['#f3e8ff', '#faf5ff']} style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        
         {/* NAV BAR */}
         <View style={styles.navBar}>
           {[
@@ -236,11 +305,7 @@ export default function Anxiosimetro({ navigation, route }) {
             );
           })}
 
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-          >
+          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
             <View style={styles.whiteCard}>
               <Image
                 source={
@@ -262,13 +327,16 @@ export default function Anxiosimetro({ navigation, route }) {
                 {!monitorActivo ? (
                   <TouchableOpacity
                     style={styles.monitorButton}
-                    onPress={() => {
-                      AsyncStorage.setItem(
-                        'inicioAnsiedad',
-                        new Date().toISOString()
-                      ).then(() => {
-                        startMonitoring();
-                      });
+                    onPress={async () => {
+         
+                      const now = new Date().toISOString();
+                      await AsyncStorage.setItem('inicioAnsiedad', now);
+
+
+                      await scheduleCongratsForDays(now, 30);
+
+            
+                      startMonitoring(now);
                     }}
                   >
                     <Text style={styles.monitorText}>Iniciar Monitoreo</Text>
@@ -276,7 +344,6 @@ export default function Anxiosimetro({ navigation, route }) {
                 ) : (
                   <View style={{ alignItems: 'center', width: '100%' }}>
                     <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
-                      {/* Yellow glow detrás (difuso) */}
                       <View style={styles.yellowGlow} />
 
                       <TouchableOpacity
@@ -286,6 +353,9 @@ export default function Anxiosimetro({ navigation, route }) {
                           hacerPop();
                           const now = new Date().toISOString();
                           await AsyncStorage.setItem('inicioAnsiedad', now);
+
+                          await scheduleCongratsForDays(now, 30);
+
                           startMonitoring(now);
                           navigation.navigate("PantallaEjercicios");
                         }}
@@ -305,8 +375,6 @@ export default function Anxiosimetro({ navigation, route }) {
     </LinearGradient>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -434,7 +502,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
- 
   fabButton: {
     width: 64,
     height: 64,
@@ -442,7 +509,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#7C3AED',
     justifyContent: 'center',
     alignItems: 'center',
-    // sombra blanca suave sobre el botón
     shadowColor: '#7C3AED',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.22,
@@ -451,13 +517,12 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
 
-
   yellowGlow: {
     position: 'absolute',
     width: 94,
     height: 94,
     borderRadius: 47,
-    backgroundColor: 'rgba(250,204,21,0.16)', // amarillo suave
+    backgroundColor: 'rgba(250,204,21,0.16)',
     shadowColor: '#edd26693',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
@@ -472,10 +537,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     fontWeight: '700',
-    color: '#4B2771', // morado oscuro
+    color: '#4B2771',
     textTransform: 'lowercase',
   },
-
 
   btnLabel: {
     marginTop: 8,

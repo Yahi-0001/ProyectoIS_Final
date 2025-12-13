@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import {
+  Alert,
   Dimensions,
   SafeAreaView,
   ScrollView,
@@ -22,9 +23,29 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
 
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+
+// ✅ NUEVO: para respetar status bar (batería/hora) y NO pegarse arriba
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+const PREFS_KEY = "@prefs_goal_notifications";
+const NOTIF_IDS_KEY = "@scheduled_notif_ids";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 export default function ProfileScreen({ navigation }) {
+  // ✅ NUEVO
+  const insets = useSafeAreaInsets();
+
   const [name, setName] = useState("Regina Gámez");
   const [email, setEmail] = useState("marir8046@gmail.com");
   const [phone, setPhone] = useState("27134578941");
@@ -38,7 +59,6 @@ export default function ProfileScreen({ navigation }) {
   const [goal, setGoal] = useState("3 chequeos al día");
   const [notificationsOn, setNotificationsOn] = useState(true);
 
-  // ✅ contadores reales
   const [calmStreak, setCalmStreak] = useState(0);
   const [sessionsCount, setSessionsCount] = useState(0);
 
@@ -65,9 +85,91 @@ export default function ProfileScreen({ navigation }) {
     setSessionsCount(sessionsSaved ? Number(sessionsSaved) : 0);
   };
 
+  // ---------- preferencias: cargar ----------
+  const loadPreferences = async () => {
+    const raw = await AsyncStorage.getItem(PREFS_KEY);
+    if (!raw) return;
+
+    try {
+      const saved = JSON.parse(raw);
+      if (saved.goal) setGoal(saved.goal);
+      if (typeof saved.notificationsOn === "boolean") {
+        setNotificationsOn(saved.notificationsOn);
+      }
+    } catch (e) {
+      console.log("Error leyendo prefs:", e);
+    }
+  };
+
+  // ---------- preferencias: guardar ----------
+  const savePreferences = async (nextGoal, nextNotificationsOn) => {
+    await AsyncStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ goal: nextGoal, notificationsOn: nextNotificationsOn })
+    );
+  };
+
+  // ---------- notificaciones: permisos ----------
+  const ensureNotifPermission = async () => {
+    if (!Device.isDevice) {
+      // emulador: puede variar, pero seguimos
+    }
+
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === "granted") return true;
+
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === "granted";
+  };
+
+  // ---------- notificaciones: cancelar ----------
+  const cancelScheduled = async () => {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    await AsyncStorage.removeItem(NOTIF_IDS_KEY);
+  };
+
+  // ---------- notificaciones: programar según meta ----------
+  const scheduleForGoal = async (nextGoal) => {
+    await cancelScheduled();
+
+    if (nextGoal === "Solo cuando lo necesite") return;
+
+    const times3 = [
+      { hour: 10, minute: 0 },
+      { hour: 15, minute: 0 },
+      { hour: 20, minute: 0 },
+    ];
+
+    const times5 = [
+      { hour: 9, minute: 0 },
+      { hour: 12, minute: 0 },
+      { hour: 15, minute: 0 },
+      { hour: 18, minute: 0 },
+      { hour: 21, minute: 0 },
+    ];
+
+    const times = nextGoal === "5 chequeos al día" ? times5 : times3;
+
+    const ids = [];
+    for (let i = 0; i < times.length; i++) {
+      const t = times[i];
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Chequeo suave 💜",
+          body: "¿Cómo te sientes ahora mismo? Respira y revisemos juntas.",
+        },
+        trigger: { hour: t.hour, minute: t.minute, repeats: true },
+      });
+      ids.push(id);
+    }
+
+    await AsyncStorage.setItem(NOTIF_IDS_KEY, JSON.stringify(ids));
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadCounters();
+      loadPreferences();
     }, [])
   );
 
@@ -80,7 +182,6 @@ export default function ProfileScreen({ navigation }) {
     const streakSaved = await AsyncStorage.getItem("@calm_streak");
     let streak = streakSaved ? Number(streakSaved) : 0;
 
-    // Si ya registraste hoy, no sumes de nuevo
     if (lastDay === today) return;
 
     if (lastDay === yesterday) {
@@ -108,40 +209,47 @@ export default function ProfileScreen({ navigation }) {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3e8ff" }}>
       <LinearGradient colors={["#faf5ff", "#f3e8ff"]} style={{ flex: 1 }}>
         <View style={styles.screen}>
+          {/* ✅ NAV BAR ARRIBA y FUERA del ScrollView (para que no se pegue a la batería) */}
+          <View
+            style={[
+              styles.navBar,
+              {
+                paddingTop: insets.top + 10, // ✅ respeta status bar
+              },
+            ]}
+          >
+            {[
+              ["stats-chart-outline", "Anxiósometro", "Anxiosimetro"],
+              ["calendar-outline", "Calendario", "Calendario"],
+              ["heart-outline", "Checking", "Checking"],
+              ["person-circle-outline", "Perfil", "Perfil"],
+            ].map(([icon, label, screen], i) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.navItem}
+                onPress={() => {
+                  setActiveNav(i);
+                  navigation.navigate(screen);
+                }}
+              >
+                <Ionicons
+                  name={icon}
+                  size={26}
+                  color={activeNav === i ? "#7C3AED" : "#9CA3AF"}
+                />
+                {activeNav === i && (
+                  <Text style={styles.navLabelActive}>{label}</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
           {/* CONTENIDO */}
           <ScrollView
             style={styles.container}
             contentContainerStyle={{ paddingBottom: 18 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* ✅ NAV BAR ARRIBA (igual que Anxiosimetro) */}
-            <View style={styles.navBarTop}>
-              {[
-                ["stats-chart-outline", "Anxiósometro", "Anxiosimetro"],
-                ["calendar-outline", "Calendario", "Calendario"],
-                ["heart-outline", "Checking", "Checking"],
-                ["person-circle-outline", "Perfil", "Perfil"],
-              ].map(([icon, label, screen], i) => (
-                <TouchableOpacity
-                  key={i}
-                  style={styles.navItemTop}
-                  onPress={() => {
-                    setActiveNav(i);
-                    navigation.navigate(screen);
-                  }}
-                >
-                  <Ionicons
-                    name={icon}
-                    size={26}
-                    color={activeNav === i ? "#7C3AED" : "#9CA3AF"}
-                  />
-                  {activeNav === i && (
-                    <Text style={styles.navLabelActiveTop}>{label}</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-
             {/* TARJETA DE BIENVENIDA CON DEGRADADO */}
             <LinearGradient
               colors={["#ffffff", "#f5f3ff"]}
@@ -218,7 +326,6 @@ export default function ProfileScreen({ navigation }) {
                     onPress={async () => {
                       setMood(item);
 
-                      // ✅ si marca tranquila, registra el día para racha
                       if (item === "Tranquila 😌") {
                         await registerCalmDay();
                       }
@@ -318,7 +425,22 @@ export default function ProfileScreen({ navigation }) {
                       styles.chipSmall,
                       goal === item && styles.chipActiveColored,
                     ]}
-                    onPress={() => setGoal(item)}
+                    onPress={async () => {
+                      setGoal(item);
+                      await savePreferences(item, notificationsOn);
+
+                      if (notificationsOn) {
+                        const ok = await ensureNotifPermission();
+                        if (!ok) {
+                          Alert.alert(
+                            "Permiso requerido",
+                            "Activa permisos de notificaciones para que te recordemos realizar los ejercicios."
+                          );
+                          return;
+                        }
+                        await scheduleForGoal(item);
+                      }
+                    }}
                   >
                     <Text
                       style={[
@@ -342,7 +464,27 @@ export default function ProfileScreen({ navigation }) {
 
                 <TouchableOpacity
                   style={[styles.toggle, notificationsOn && styles.toggleOn]}
-                  onPress={() => setNotificationsOn(!notificationsOn)}
+                  onPress={async () => {
+                    const next = !notificationsOn;
+                    setNotificationsOn(next);
+                    await savePreferences(goal, next);
+
+                    if (next) {
+                      const ok = await ensureNotifPermission();
+                      if (!ok) {
+                        setNotificationsOn(false);
+                        await savePreferences(goal, false);
+                        Alert.alert(
+                          "Permiso requerido",
+                          "No se pudo activar notificaciones porque no diste permisos."
+                        );
+                        return;
+                      }
+                      await scheduleForGoal(goal);
+                    } else {
+                      await cancelScheduled();
+                    }
+                  }}
                 >
                   <View
                     style={[
@@ -439,23 +581,19 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
 
-  // ✅ NAV BAR ARRIBA (igual a anxiosimetro)
-  navBarTop: {
+  // ✅ NAV BAR IGUAL A LA DE anxiosimetro.js
+  navBar: {
     flexDirection: "row",
     justifyContent: "space-around",
     backgroundColor: "white",
-    paddingVertical: 10,
+    paddingBottom: 10,
     elevation: 5,
-    borderRadius: 16,
-
-    marginTop: 25,      // 👈 BAJA la barra
-    marginBottom: 14,
   },
-  navItemTop: {
+  navItem: {
     alignItems: "center",
     width: SCREEN_WIDTH * 0.22,
   },
-  navLabelActiveTop: {
+  navLabelActive: {
     color: "#7C3AED",
     fontSize: 12,
     marginTop: 4,
@@ -552,7 +690,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // ✅ botón sesión
   sessionButton: {
     backgroundColor: "#7C3AED",
     paddingVertical: 12,
@@ -571,7 +708,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // SECCIONES / CARDS
   section: {
     marginBottom: 16,
   },
@@ -610,7 +746,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  // CHIPS
   chipsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -650,7 +785,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#7C3AED",
   },
 
-  // INPUTS
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -682,7 +816,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  // PREFERENCIAS
   preferenceRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -722,7 +855,6 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
 
-  // MENÚ
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -741,4 +873,3 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-
