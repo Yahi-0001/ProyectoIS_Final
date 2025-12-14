@@ -14,7 +14,6 @@ import {
   View,
 } from "react-native";
 
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -38,7 +37,6 @@ import { deleteUser, signOut } from "firebase/auth";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebaseConfig";
 
-
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const PREFS_KEY = "@prefs_goal_notifications";
@@ -60,28 +58,34 @@ export default function ProfileScreen({ navigation }) {
   const [phone, setPhone] = useState("");
   const [language, setLanguage] = useState("es");
 
-  // Centro de ayuda 
+  // Centro de ayuda
   const [showHelp, setShowHelp] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  // Confi
+
+  // Config
   const [showConfig, setShowConfig] = useState(false);
   const configRotateAnim = useRef(new Animated.Value(0)).current;
 
+  // ✅ Feedback
+  const [feedbackMsg, setFeedbackMsg] = useState("");
+
   const toggleConfig = () => {
-  Animated.timing(configRotateAnim, {
-    toValue: showConfig ? 0 : 1,
-    duration: 220,
-    useNativeDriver: true,
-  }).start();
+    Animated.timing(configRotateAnim, {
+      toValue: showConfig ? 0 : 1,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
 
-  setShowConfig(!showConfig);
-};
+    setShowConfig(!showConfig);
 
-const rotateConfigChevron = configRotateAnim.interpolate({
-  inputRange: [0, 1],
-  outputRange: ["0deg", "180deg"],
-});
+    // opcional: cuando abres/cierra config, limpia el mensaje
+    // setFeedbackMsg("");
+  };
 
+  const rotateConfigChevron = configRotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
 
   const toggleHelp = () => {
     Animated.timing(rotateAnim, {
@@ -97,8 +101,6 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     outputRange: ["0deg", "180deg"],
   });
 
-
-
   // NAV: Perfil activo
   const [activeNav, setActiveNav] = useState(3);
 
@@ -110,7 +112,6 @@ const rotateConfigChevron = configRotateAnim.interpolate({
   const [calmStreak, setCalmStreak] = useState(0);
   const [sessionsCount, setSessionsCount] = useState(0);
 
-  
   const getLocalDateKey = (date = new Date()) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -149,7 +150,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     }
   };
 
-  //  preferencias: guardar
+  // preferencias: guardar
   const savePreferences = async (nextGoal, nextNotificationsOn) => {
     await AsyncStorage.setItem(
       PREFS_KEY,
@@ -176,7 +177,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     await AsyncStorage.removeItem(NOTIF_IDS_KEY);
   };
 
-  // notificaciones: programar según meta 
+  // notificaciones: programar según meta
   const scheduleForGoal = async (nextGoal) => {
     await cancelScheduled();
 
@@ -222,7 +223,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     }, [])
   );
 
-  // racha: registrar “Tranquila” 1 vez por día 
+  // racha: registrar “Tranquila” 1 vez por día
   const registerCalmDay = async () => {
     const today = getLocalDateKey();
     const yesterday = getYesterdayKey();
@@ -244,7 +245,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     setCalmStreak(streak);
   };
 
-  //  sesiones: sumar 1 al tocar el button
+  // sesiones: sumar 1 al tocar el button
   const addSession = async () => {
     const saved = await AsyncStorage.getItem("@sessions_count");
     const current = saved ? Number(saved) : 0;
@@ -265,10 +266,9 @@ const rotateConfigChevron = configRotateAnim.interpolate({
       if (snap.exists()) {
         const data = snap.data();
 
-        setName(data.nombre ?? "");  
+        setName(data.nombre ?? "");
         setEmail(data.correo ?? user.email);
         setPhone(data.telefono ?? "");
-        
       }
     } catch (error) {
       console.log("Error cargando perfil:", error);
@@ -321,7 +321,10 @@ const rotateConfigChevron = configRotateAnim.interpolate({
                 routes: [{ name: "Login" }],
               });
 
-              Alert.alert("Cuenta eliminada", "Tu cuenta ha sido eliminada correctamente.");
+              Alert.alert(
+                "Cuenta eliminada",
+                "Tu cuenta ha sido eliminada correctamente."
+              );
             } catch (error) {
               console.log("Error al eliminar cuenta:", error);
               if (error.code === "auth/requires-recent-login") {
@@ -351,18 +354,16 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     );
   };
 
-
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3e8ff" }}>
       <LinearGradient colors={["#faf5ff", "#f3e8ff"]} style={{ flex: 1 }}>
         <View style={styles.screen}>
-          {/* NAV BAR ARRIBA y FUERA del ScrollView (para que no se pegue a la batería) */}
+          {/* NAV BAR ARRIBA y FUERA del ScrollView */}
           <View
             style={[
               styles.navBar,
               {
-                paddingTop: insets.top + 10, 
+                paddingTop: insets.top + 10,
               },
             ]}
           >
@@ -392,13 +393,12 @@ const rotateConfigChevron = configRotateAnim.interpolate({
             ))}
           </View>
 
-         
           <ScrollView
             style={styles.container}
             contentContainerStyle={{ paddingBottom: 18 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* TARJETA DE BIENVENIDA CON DEGRADADO */}
+            {/* TARJETA DE BIENVENIDA */}
             <LinearGradient
               colors={["#ffffff", "#f5f3ff"]}
               start={{ x: 0, y: 0 }}
@@ -504,11 +504,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
                 </TouchableOpacity>
               </View>
               <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                />
+                <TextInput style={styles.input} value={name} onChangeText={setName} />
               </View>
 
               {/* CORREO */}
@@ -562,44 +558,42 @@ const rotateConfigChevron = configRotateAnim.interpolate({
 
               <Text style={styles.labelInline}>Meta diaria</Text>
               <View style={styles.chipsRow}>
-                {[
-                  "3 chequeos al día",
-                  "5 chequeos al día",
-                  "Solo cuando lo necesite",
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.chipSmall,
-                      goal === item && styles.chipActiveColored,
-                    ]}
-                    onPress={async () => {
-                      setGoal(item);
-                      await savePreferences(item, notificationsOn);
-
-                      if (notificationsOn) {
-                        const ok = await ensureNotifPermission();
-                        if (!ok) {
-                          Alert.alert(
-                            "Permiso requerido",
-                            "Activa permisos de notificaciones para que te recordemos realizar los ejercicios."
-                          );
-                          return;
-                        }
-                        await scheduleForGoal(item);
-                      }
-                    }}
-                  >
-                    <Text
+                {["3 chequeos al día", "5 chequeos al día", "Solo cuando lo necesite"].map(
+                  (item) => (
+                    <TouchableOpacity
+                      key={item}
                       style={[
-                        styles.chipTextSmall,
-                        goal === item && styles.chipTextActive,
+                        styles.chipSmall,
+                        goal === item && styles.chipActiveColored,
                       ]}
+                      onPress={async () => {
+                        setGoal(item);
+                        await savePreferences(item, notificationsOn);
+
+                        if (notificationsOn) {
+                          const ok = await ensureNotifPermission();
+                          if (!ok) {
+                            Alert.alert(
+                              "Permiso requerido",
+                              "Activa permisos de notificaciones para que te recordemos realizar los ejercicios."
+                            );
+                            return;
+                          }
+                          await scheduleForGoal(item);
+                        }
+                      }}
                     >
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.chipTextSmall,
+                          goal === item && styles.chipTextActive,
+                        ]}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                )}
               </View>
 
               <View style={[styles.preferenceRow, { marginTop: 20 }]}>
@@ -644,7 +638,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
               </View>
             </LinearGradient>
 
-           
+            {/* MÁS OPCIONES */}
             <LinearGradient
               colors={["#eef2ff", "#fef9c3"]}
               start={{ x: 0, y: 0 }}
@@ -653,191 +647,205 @@ const rotateConfigChevron = configRotateAnim.interpolate({
             >
               <Text style={styles.sectionTitle}>Más opciones ⚙️</Text>
 
-              <TouchableOpacity
-  style={styles.menuItem}
-  onPress={toggleConfig}
+              {/* Configuración */}
+              <TouchableOpacity style={styles.menuItem} onPress={toggleConfig}>
+                <View style={[styles.iconBubble, { backgroundColor: "#e0f2fe" }]}>
+                  <Ionicons name="settings-sharp" size={18} color="#1D4ED8" />
+                </View>
 
->
-  <View style={[styles.iconBubble, { backgroundColor: "#e0f2fe" }]}>
-    <Ionicons name="settings-sharp" size={18} color="#1D4ED8" />
-  </View>
+                <Text style={styles.menuText}>Configuración</Text>
 
-  <Text style={styles.menuText}>Configuración</Text>
+                <Animated.View
+                  style={{
+                    marginLeft: "auto",
+                    transform: [{ rotate: rotateConfigChevron }],
+                  }}
+                >
+                  <Entypo name="chevron-down" size={22} color="#6B7280" />
+                </Animated.View>
+              </TouchableOpacity>
 
-  <Animated.View
-  style={{
-    marginLeft: "auto",
-    transform: [{ rotate: rotateConfigChevron }],
-  }}
->
-  <Entypo name="chevron-down" size={22} color="#6B7280" />
-</Animated.View>
+              {showConfig && (
+                <View style={styles.helpContainer}>
+                  <Text style={styles.helpQuestion}>Privacidad</Text>
 
-</TouchableOpacity>
+                  <Text style={styles.helpAnswer}>
+                    🔒Tus datos se guardan solo en tu dispositivo.
+                  </Text>
+                  <Text style={styles.helpAnswer}></Text>
 
-{showConfig && (
-  <View style={styles.helpContainer}>
-    <Text style={styles.helpQuestion}>Privacidad</Text>
+                  <Text style={styles.helpAnswer}>
+                    🔒No compartimos información con terceros.
+                  </Text>
+                  <Text style={styles.helpAnswer}></Text>
 
-    <Text style={styles.helpAnswer}>
-      🔒Tus datos se guardan solo en tu dispositivo.
-    </Text>
-    <Text style={styles.helpAnswer}></Text>
-    <Text style={styles.helpAnswer}>
-      🔒No compartimos información con terceros.
+                  <Text style={styles.helpAnswer}>
+                    🔒Puedes borrar toda tu información cuando desees.
+                  </Text>
 
-    </Text>
-      <Text style={styles.helpAnswer}></Text>
-    <Text style={styles.helpAnswer}>
-      🔒Puedes borrar toda tu información cuando desees.
-    </Text>
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={styles.helpQuestion}>Información</Text>
+                    <Text style={styles.helpAnswer}>Anxiously</Text>
+                    <Text style={styles.helpAnswer}>Versión 2.0.0</Text>
+                    <Text style={styles.helpAnswer}> </Text>
+                    <Text style={styles.helpAnswer}>
+                      Esta app fue creada con cariño para acompañarte, no para exigirte.
+                    </Text>
+                  </View>
 
-    <View style={{ marginTop: 12 }}>
-      <Text style={styles.helpQuestion}>Información</Text>
-      <Text style={styles.helpAnswer}>Anxiously</Text>
-      <Text style={styles.helpAnswer}>Versión 2.0.0</Text>
-      <Text style={styles.helpAnswer}> </Text>
-      <Text style={styles.helpAnswer}>Esta app fue creada con cariño para acompañarte, no para exigirte.</Text>
-    </View>
+                  {/* ✅ FEEDBACK FUNCIONAL */}
+                  <View style={{ marginTop: 16 }}>
+                    <Text style={styles.helpQuestion}>
+                      ¿Te resultó útil esta información?
+                    </Text>
 
-    <View style={{ marginTop: 16 }}>
-  <Text style={styles.helpQuestion}>
-    ¿Te resultó útil esta información?
-  </Text>
+                    <View style={{ flexDirection: "row", marginTop: 8 }}>
+                      <TouchableOpacity
+                        onPress={() =>
+                          setFeedbackMsg(
+                            "Gracias por estar aquí 💜 Me alegra acompañarte en tu proceso."
+                          )
+                        }
+                        style={{
+                          backgroundColor: "#7C3AED",
+                          paddingVertical: 6,
+                          paddingHorizontal: 14,
+                          borderRadius: 20,
+                          marginRight: 10,
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "600" }}>
+                          Sí 💜
+                        </Text>
+                      </TouchableOpacity>
 
-  <View style={{ flexDirection: "row", marginTop: 8 }}>
-    <TouchableOpacity
-      style={{
-        backgroundColor: "#7C3AED",
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-        borderRadius: 20,
-        marginRight: 10,
-      }}
-    >
-      <Text style={{ color: "#fff", fontWeight: "600" }}>
-        Sí 💜
-      </Text>
-    </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() =>
+                          setFeedbackMsg("Gracias por decirlo 🤍 Seguiremos mejorando para ti.")
+                        }
+                        style={{
+                          backgroundColor: "#E5E7EB",
+                          paddingVertical: 6,
+                          paddingHorizontal: 14,
+                          borderRadius: 20,
+                        }}
+                      >
+                        <Text style={{ color: "#374151", fontWeight: "600" }}>
+                          No 🤍
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
 
-    <TouchableOpacity
-      style={{
-        backgroundColor: "#E5E7EB",
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-        borderRadius: 20,
-      }}
-    >
-      <Text style={{ color: "#374151", fontWeight: "600" }}>
-        No 🤍
-      </Text>
-    </TouchableOpacity>
-  </View>
-</View>
+                    {feedbackMsg !== "" && (
+                      <View
+                        style={{
+                          marginTop: 12,
+                          backgroundColor: "#F5F3FF",
+                          padding: 10,
+                          borderRadius: 12,
+                        }}
+                      >
+                        <Text style={{ color: "#4C1D95", fontSize: 13 }}>
+                          {feedbackMsg}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
 
-  </View>
-)}
+              {/* Centro de ayuda */}
+              <TouchableOpacity style={styles.menuItem} onPress={toggleHelp}>
+                <View style={[styles.iconBubble, { backgroundColor: "#fef3c7" }]}>
+                  <Ionicons name="help-circle-outline" size={18} color="#B45309" />
+                </View>
 
+                <Text style={styles.menuText}>Centro de ayuda</Text>
 
-             <TouchableOpacity style={styles.menuItem} onPress={toggleHelp}>
-  <View style={[styles.iconBubble, { backgroundColor: "#fef3c7" }]}>
-    <Ionicons
-      name="help-circle-outline"
-      size={18}
-      color="#B45309"
-    />
-  </View>
+                <Animated.View
+                  style={{
+                    marginLeft: "auto",
+                    transform: [{ rotate: rotateChevron }],
+                  }}
+                >
+                  <Entypo name="chevron-down" size={22} color="#6B7280" />
+                </Animated.View>
+              </TouchableOpacity>
 
-  <Text style={styles.menuText}>Centro de ayuda</Text>
+              {showHelp && (
+                <View style={styles.helpContainer}>
+                  <Text style={styles.helpQuestion}>¿Cómo reinicio el contador?</Text>
+                  <Text style={styles.helpAnswer}>
+                    Puedes reiniciar el contador desde el botón de apoyo en la pantalla
+                    principal. El tiempo comenzará nuevamente desde cero.
+                  </Text>
 
-  <Animated.View
-    style={{
-      marginLeft: "auto",
-      transform: [{ rotate: rotateChevron }],
-    }}
-  >
-    <Entypo name="chevron-down" size={22} color="#6B7280" />
-  </Animated.View>
-</TouchableOpacity>
+                  <Text style={styles.helpQuestion}>¿Por qué no me llegan felicitaciones?</Text>
+                  <Text style={styles.helpAnswer}>
+                    Revisa que las notificaciones estén activadas y que el modo ahorro
+                    de batería no esté bloqueando la app.
+                  </Text>
 
-{showHelp && (
-  <View style={styles.helpContainer}>
-    <Text style={styles.helpQuestion}>¿Cómo reinicio el contador?</Text>
-    <Text style={styles.helpAnswer}>
-      Puedes reiniciar el contador desde el botón de apoyo en la pantalla
-      principal. El tiempo comenzará nuevamente desde cero.
-    </Text>
+                  <Text style={styles.helpQuestion}>¿Qué pasa si cambio de celular?</Text>
+                  <Text style={styles.helpAnswer}>
+                    Los datos se guardan localmente en tu dispositivo. Al cambiar de
+                    celular o desinstalar la app, el contador se reiniciará.
+                  </Text>
 
-    <Text style={styles.helpQuestion}>¿Por qué no me llegan felicitaciones?</Text>
-    <Text style={styles.helpAnswer}>
-      Revisa que las notificaciones estén activadas y que el modo ahorro
-      de batería no esté bloqueando la app.
-    </Text>
+                  <Text style={styles.helpQuestion}>¿Cómo funciona el calendario?</Text>
+                  <Text style={styles.helpAnswer}>
+                    El calendario muestra de forma visual los días que has avanzado y
+                    tu seguimiento.
+                  </Text>
 
-    <Text style={styles.helpQuestion}>¿Qué pasa si cambio de celular?</Text>
-    <Text style={styles.helpAnswer}>
-      Los datos se guardan localmente en tu dispositivo. Al cambiar de
-      celular o desinstalar la app, el contador se reiniciará.
-    </Text>
+                  <Text style={styles.helpQuestion}>
+                    ¿Puedo volver a hacer el test de personalidad?
+                  </Text>
+                  <Text style={styles.helpAnswer}>
+                    No. Solo se puede responder una sola vez, mas adelante haremos
+                    mejoras para descubrir como va cambiando tu personalidad.
+                  </Text>
 
-    <Text style={styles.helpQuestion}>¿Cómo funciona el calendario?</Text>
-    <Text style={styles.helpAnswer}>
-      El calendario muestra de forma visual los días que has avanzado y
-      tu seguimiento.
-    </Text>
+                  <View style={styles.crisisBox}>
+                    <Text style={styles.crisisTitle}>
+                      Si te sientes en riesgo o necesitas apoyo....
+                    </Text>
 
-    <Text style={styles.helpQuestion}>
-      ¿Puedo volver a hacer el test de personalidad?
-    </Text>
-    <Text style={styles.helpAnswer}>
-      No. Solo se puede responder una sola vez, mas adelante haremos mejoras para descubrir como va cambiando tu personalidad.
-    </Text>
+                    <Text style={styles.helpAnswer}>
+                      Si estás pasando por un momento muy difícil o necesitas hablar con
+                      alguien profesional, hay apoyo gratuito y confidencial.
+                      Atención las 24 horas, los 365 días del año.
+                    </Text>
 
-    <View style={styles.crisisBox}>
-      <Text style={styles.crisisTitle}>
-        Si te sientes en riesgo o necesitas apoyo....
-      </Text>
+                    <Text style={styles.crisisPhone}>
+                      📞 Línea de intervención en crisis psicológicas (Veracruz)
+                    </Text>
 
-      <Text style={styles.helpAnswer}>
-        Si estás pasando por un momento muy difícil o necesitas hablar con
-        alguien profesional, hay apoyo gratuito y confidencial. 
-        Atención las 24 horas, los 365 días del año.
-      </Text>
+                    <TouchableOpacity onPress={() => Linking.openURL("tel:8002603100")}>
+                      <Text style={styles.crisisNumber}>800 260 3100</Text>
+                    </TouchableOpacity>
 
-      <Text style={styles.crisisPhone}>
-        📞 Línea de intervención en crisis psicológicas (Veracruz)
-      </Text>
+                    <TouchableOpacity onPress={() => Linking.openURL("tel:2288144465")}>
+                      <Text style={styles.crisisNumber}>228 814 4465</Text>
+                    </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => Linking.openURL("tel:8002603100")}>
-        <Text style={styles.crisisNumber}>800 260 3100</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => Linking.openURL("tel:2288144465")}>
-          <Text style={styles.crisisNumber}>228 814 4465</Text>
-          </TouchableOpacity>
+                    <Text style={[styles.crisisPhone, { marginTop: 6 }]}>
+                      📞 Línea de la Vida (México)
+                    </Text>
 
+                    <TouchableOpacity onPress={() => Linking.openURL("tel:8009112000")}>
+                      <Text style={styles.crisisNumber}>800 911 2000</Text>
+                    </TouchableOpacity>
 
-      <Text style={[styles.crisisPhone, { marginTop: 6 }]}>
-        📞 Línea de la Vida (México)
-      </Text>
-      
-      <TouchableOpacity onPress={() => Linking.openURL("tel:8009112000")}>
-          <Text style={styles.crisisNumber}>800 911 2000</Text>
-          </TouchableOpacity>
+                    <Text style={styles.crisisFooter}>
+                      No tienes que pasar por esto sola 🤍
+                    </Text>
+                  </View>
+                </View>
+              )}
 
-      <Text style={styles.crisisFooter}>
-        No tienes que pasar por esto sola 🤍
-      </Text>
-    </View>
-  </View>
-)}
-
-
-
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={handleDeleteAccount} 
-              >
+              {/* Eliminar cuenta */}
+              <TouchableOpacity style={styles.menuItem} onPress={handleDeleteAccount}>
                 <View style={[styles.iconBubble, { backgroundColor: "#fee2e2" }]}>
                   <Ionicons name="warning-outline" size={18} color="#DC2626" />
                 </View>
@@ -846,6 +854,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
                 </Text>
               </TouchableOpacity>
 
+              {/* Cerrar sesión */}
               <TouchableOpacity
                 style={[styles.menuItem, { marginTop: 6 }]}
                 onPress={handleLogout}
@@ -874,7 +883,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
 
-
   navBar: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -893,7 +901,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // HEADER / PERFIL
   headerCard: {
     flexDirection: "row",
     borderRadius: 24,
@@ -950,7 +957,6 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 
-  // STATS
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1167,61 +1173,57 @@ const styles = StyleSheet.create({
   },
 
   helpContainer: {
-  backgroundColor: "#FFFFFF",
-  borderRadius: 18,
-  padding: 14,
-  marginTop: 8,
-},
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 14,
+    marginTop: 8,
+  },
 
-helpQuestion: {
-  fontSize: 14,
-  fontWeight: "600",
-  color: "#6540a1ff",
-  marginTop: 10,
-},
+  helpQuestion: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6540a1ff",
+    marginTop: 10,
+  },
 
-helpAnswer: {
-  fontSize: 13,
-  color: "#434d5cff",
-  lineHeight: 18,
-},
+  helpAnswer: {
+    fontSize: 13,
+    color: "#434d5cff",
+    lineHeight: 18,
+  },
 
-crisisBox: {
-  marginTop: 16,
-  borderTopWidth: 1,
-  borderTopColor: "#E5E7EB",
-  paddingTop: 10,
-},
+  crisisBox: {
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    paddingTop: 10,
+  },
 
-crisisTitle: {
-  fontSize: 15,
-  fontWeight: "700",
-  color: "#991B1B",
-  marginBottom: 6,
-},
+  crisisTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#991B1B",
+    marginBottom: 6,
+  },
 
-crisisPhone: {
-  fontSize: 13,
-  fontWeight: "600",
-  color: "#7F1D1D",
-  marginTop: 6,
-},
+  crisisPhone: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#7F1D1D",
+    marginTop: 6,
+  },
 
-crisisNumber: {
-  fontSize: 14,
-  fontWeight: "700",
-  color: "#111827",
-  textDecorationLine: "underline",
-},
+  crisisNumber: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111827",
+    textDecorationLine: "underline",
+  },
 
-
-crisisFooter: {
-  fontSize: 12,
-  marginTop: 8,
-  color: "#374151",
-},
-
-
-
-
+  crisisFooter: {
+    fontSize: 12,
+    marginTop: 8,
+    color: "#374151",
+  },
 });
+
