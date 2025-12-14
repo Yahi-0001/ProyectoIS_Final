@@ -1,4 +1,4 @@
-# Lista de impedimentos y cómo se resolvieron SPRINT_1
+# Lista de impedimentos y cómo se resolvieron SPRINT_2
 
 1. **Impedimento:** Direccionar las pantallas y agregar un nuevo apartado
    **Fecha detectada:** 08/12/2025  
