@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// Imágenes por pregunta (ajusta rutas según tu proyecto)
+// Imágenes por pregunta
 const ILLUSTRATIONS = {
   2: require("../assets/p2.jpg"),
   3: require("../assets/p3.jpg"),
@@ -246,7 +246,7 @@ const EMOCIONES = [
   },
 ];
 
-// 👉 Mapeo del mood del test a la emoción del CalendarioEmocional
+//  Mapeo del mood del test a la emoción del CalendarioEmocional
 function mapMoodToCalendarEmotion(moodId) {
   switch (moodId) {
     case "extasis":
@@ -273,7 +273,7 @@ function mapMoodToCalendarEmotion(moodId) {
   }
 }
 
-// 👉 Guarda la emoción del día en AsyncStorage para el calendario
+// Guardar la emoción del día en AsyncStorage para el calendario
 async function guardarEmocionEnCalendario(moodId) {
   if (!moodId) return;
 
@@ -543,7 +543,7 @@ export default function TestDiario({ navigation }) {
 
     console.log("RESULTADO COMPLETO TEST:", payload);
 
-    // 💾 Guardar emoción del día para el calendario
+    // Guardar emoción del día para el calendario
     try {
       await guardarEmocionEnCalendario(selectedMood);
     } catch (e) {
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 12,
-    justifyContent: "center", // 🔧 centra la tarjeta
+    justifyContent: "center",
   },
 
   card: {

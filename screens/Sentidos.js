@@ -1,12 +1,12 @@
-// AnchorageSensesScreen.js
-import React, { useState, useMemo } from "react";
+
+import { useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from "react-native";
 
 const TOTAL_FIELDS = 5 + 4 + 3 + 2 + 1; // 15
@@ -43,7 +43,6 @@ const AnchorageSensesScreen = ({ navigation }) => {
   };
 
   const handleSave = () => {
-    // aquí podrías guardar en backend o AsyncStorage
     setSaved(true);
   };
 
@@ -159,7 +158,7 @@ const AnchorageSensesScreen = ({ navigation }) => {
             <Text style={styles.secondaryButtonText}>Repetir ejercicio</Text>
           </TouchableOpacity>
 
-          {/* NUEVO botón Anxiosímetro */}
+          {/* botón Anxiosímetro */}
           <TouchableOpacity
             style={styles.anxioButton}
             activeOpacity={0.7}

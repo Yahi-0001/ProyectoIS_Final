@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, ImageBackground, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Inicio({ navigation }) {
   return (

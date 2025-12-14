@@ -15,7 +15,7 @@ import {
 
 const { width, height } = Dimensions.get("window");
 
-// ⭐ Crear estrellas
+// Crear estrellas
 const createStars = () => {
   return Array.from({ length: 50 }).map(() => ({
     left: Math.random() * width,
@@ -34,7 +34,7 @@ export default function PantallaEjercicios() {
   const [showMeditacionBtn, setShowMeditacionBtn] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
 
-  // ⭐ Estrellas
+  // Estrellas
   const [stars] = useState(createStars());
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function PantallaEjercicios() {
     });
   }, []);
 
-  // ⭐ FRASES DINÁMICAS
+  // FRASES DINÁMICAS
   const frases = [
     "Inhala lentamente…",
     "Exhala… suéltalo",
@@ -78,7 +78,7 @@ export default function PantallaEjercicios() {
     return () => clearInterval(interval);
   }, [showVideo]);
 
-  // ⭐ AUDIO
+  // AUDIO
   async function playSound() {
     const { sound } = await Audio.Sound.createAsync(
       require('../assets/sounds/inhale.mp3'),
@@ -95,7 +95,7 @@ export default function PantallaEjercicios() {
     return () => { if (sound) sound.unloadAsync(); };
   }, []);
 
-  // ⭐ CRONÓMETRO
+  // CRONÓMETRO
   useEffect(() => {
     if (timeLeft === 0) {
       setShowMeditacionBtn(true);
@@ -106,7 +106,7 @@ export default function PantallaEjercicios() {
     return () => clearInterval(interval);
   }, [timeLeft]);
 
-  // ⭐ VOLVER
+  // VOLVER
   const volver = async () => {
     try {
       if (sound) {
@@ -122,7 +122,7 @@ export default function PantallaEjercicios() {
     navigation.navigate("Anxiosimetro");
   };
 
-  // ⭐ ACTIVAR VIDEO
+  // ACTIVAR VIDEO
   const iniciarMeditacion = async () => {
     if (sound) {
       await sound.stopAsync();
@@ -134,7 +134,7 @@ export default function PantallaEjercicios() {
   return (
     <View style={styles.container}>
 
-      {/* ⭐ FONDO: LLUVIA DE ESTRELLAS */}
+      {/* FONDO: LLUVIA DE ESTRELLAS */}
       {stars.map((star, index) => {
         const translateY = star.anim.interpolate({
           inputRange: [0, 1],
@@ -205,9 +205,8 @@ export default function PantallaEjercicios() {
   );
 }
 
-// -------------------------------
-// ⭐ ESTILOS
-// -------------------------------
+
+// ESTILOS
 const styles = StyleSheet.create({
   container: {
     flex: 1,

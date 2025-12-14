@@ -1,4 +1,3 @@
-// App.js
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
@@ -12,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-// ========================= PREGUNTAS =========================
+
 const QUESTIONS = [
   // SECCIÓN 1 — Personalidad
   {
@@ -204,7 +203,7 @@ const QUESTIONS = [
   },
 ];
 
-// ========================= TEXTO DE RESULTADOS =========================
+//  TEXTO DE RESULTADOS 
 const getResultText = (score) => {
   if (score <= 25) {
     return {
@@ -249,9 +248,9 @@ const getResultText = (score) => {
   }
 };
 
-// ========================= APP =========================
+//  APP 
 export default function App() {
-  const navigation = useNavigation(); // 👈 NUEVO
+  const navigation = useNavigation(); 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
@@ -314,7 +313,7 @@ export default function App() {
     navigation.navigate("Anxiosimetro"); 
   };
 
-  // ========================= PANTALLA RESULTADO =========================
+  // PANTALLA RESULTADO 
   if (showResult || savedResult) {
     return (
       <SafeAreaView style={styles.container}>
@@ -400,7 +399,7 @@ export default function App() {
     );
   }
 
-  // ========================= PANTALLA PREGUNTAS =========================
+  //  PANTALLA PREGUNTAS 
   const selectedValue = answers[currentQuestion.id];
 
   return (
@@ -475,7 +474,7 @@ export default function App() {
   );
 }
 
-// ========================= ESTILOS =========================
+//  ESTILOS 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -493,7 +492,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  // ─── TIPOGRAFÍA GENERAL ─────────────────────
+  // TIPOGRAFÍA GENERAL 
   appTitle: {
     fontSize: 30,
     fontWeight: "900",
@@ -518,7 +517,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // ─── CARD DE PREGUNTA ───────────────────────
+  // CARD DE PREGUNTA
   questionCard: {
     marginTop: 26,
     padding: 24,
@@ -578,7 +577,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 
-  // ─── BOTÓN PRINCIPAL ────────────────────────
+  //  BOTÓN PRINCIPAL
   primaryButton: {
     width: "100%",
     paddingVertical: 18,
@@ -605,7 +604,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  // ─── RESULTADO ──────────────────────────────
+  //  RESULTADO 
   resultCard: {
     marginTop: 16,
     padding: 22,
@@ -638,7 +637,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ─── NUEVA TARJETA TIP ──────────────────────
+  // NUEVA TARJETA TIP 
   tipCard: {
     marginTop: 18,
     padding: 18,
@@ -658,7 +657,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ─── BOX DE GUARDAR ─────────────────────────
+  //  BOX DE GUARDAR
   savedBox: {
     marginTop: 18,
     padding: 18,
@@ -678,7 +677,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ─── BOTÓN SECUNDARIO (SALIR) ───────────────
+  // BOTÓN SECUNDARIO (SALIR)
   secondaryButton: {
     marginTop: 14,
     paddingVertical: 14,

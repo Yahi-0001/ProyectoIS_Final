@@ -3,12 +3,12 @@ import { Audio, Video } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,7 +20,7 @@ const IMAGEN_TARJETA = require("../assets/conejo.png");
 
 export default function PantallaEjercicios2({ navigation }) {
   // step = lo que pasa dentro de la tarjeta grande
-  // idle = carta grande vacía, esperando que aceptes
+  // idle = carta grande vacía
   const [step, setStep] = useState("idle"); // idle | video1 | countdown | video2 | silence | video3
   const [video1Count, setVideo1Count] = useState(0);
   const [countdown, setCountdown] = useState(3);
@@ -60,7 +60,7 @@ export default function PantallaEjercicios2({ navigation }) {
   }, [showIntroCard, introOpacity, introScale]);
 
   const handleStart = () => {
-    // Ocultar tarjeta flotante y recién ahí arrancar toda la secuencia
+    // Ocultar tarjeta flotante y ahí arrancar toda la secuencia
     Animated.timing(introOpacity, {
       toValue: 0,
       duration: 250,
@@ -195,7 +195,7 @@ export default function PantallaEjercicios2({ navigation }) {
     }, 2500);
   };
 
-  // manejar fin del VIDEO_3 → volver a TestDiario
+  // manejar fin del VIDEO_3, volver a TestDiario
   const handleVideo3Status = (status) => {
     if (!status.isLoaded || step !== "video3") return;
 
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // Media (videos) dentro de la tarjeta grande
+  // videos dentro de la tarjeta grande
   mediaContainer: {
     flex: 1,
     borderRadius: 20,

@@ -1,12 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Image,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -28,8 +28,6 @@ export default function IntroArticuloAnsiedad({ navigation }) {
 
     animationRef.current.start(({ finished }) => {
       if (finished) {
-        // 👇 Asegúrate que en tu navigator exista:
-        // <Stack.Screen name="InfoAnsiedad" component={InfoAnsiedad} />
         navigation.replace("InfoAnsiedad");
       }
     });

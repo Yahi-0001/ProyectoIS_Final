@@ -1,16 +1,16 @@
 // Autoabrazo.js
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av"; // 👈 NUEVO import para el audio
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const DURATIONS = [
   { label: "2 min", value: 120 },
@@ -32,7 +32,7 @@ export default function AutoabrazoScreen({ navigation }) {
 
   // Sonido suave
   const [soundOn, setSoundOn] = useState(false);
-  const [sound, setSound] = useState(null); // 👈 guardamos el objeto de audio
+  const [sound, setSound] = useState(null); //guardamos el objeto de audio
 
   const [emojiIndex, setEmojiIndex] = useState(0);
 
@@ -117,7 +117,7 @@ export default function AutoabrazoScreen({ navigation }) {
         let currentSound = sound;
         if (!currentSound) {
           const { sound: createdSound } = await Audio.Sound.createAsync(
-            require("../assets/Respiracion/cancion.mp3"), // 👈 tu archivo
+            require("../assets/Respiracion/cancion.mp3"), 
             {
               isLooping: true,
             }

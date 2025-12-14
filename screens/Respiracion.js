@@ -1,22 +1,21 @@
-// Respiration478Screen.js
-import React, { useState, useEffect, useRef } from "react";
-import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  Animated,
-  ScrollView,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Audio, ResizeMode, Video } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
-import { Audio, Video, ResizeMode } from "expo-av";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 // sonidos
-import inhaleSoundFile from "../assets/sounds/inhale.mp3";
 import exhaleSoundFile from "../assets/sounds/exhale.mp3";
+import inhaleSoundFile from "../assets/sounds/inhale.mp3";
 
 const PHASES = [
   {
@@ -132,7 +131,7 @@ export default function Respiration478Screen({ navigation }) {
           return PHASES[nextIdx].seconds;
         }
 
-        // terminó exhalación → siguiente ciclo
+        // terminó exhalación 
         if (cycle < TOTAL_CYCLES) {
           const nextCycle = cycle + 1;
           setCycle(nextCycle);
@@ -199,7 +198,7 @@ export default function Respiration478Screen({ navigation }) {
     return <View style={styles.cycleRow}>{dots}</View>;
   };
 
-  // ───────────────── PANTALLA FINAL ─────────────────
+  //  PANTALLA FINAL 
   if (finished) {
     return (
       <SafeAreaView style={styles.container}>
@@ -260,7 +259,7 @@ export default function Respiration478Screen({ navigation }) {
               </Text>
             </View>
 
-            {/* Video embebido */}
+            {/* Video */}
             <View style={styles.videoCard}>
               <Text style={styles.tipTitle}>Profundiza con el video 🎬</Text>
               <Text style={styles.tipText}>
@@ -317,7 +316,7 @@ export default function Respiration478Screen({ navigation }) {
     );
   }
 
-  // ───────────────── PANTALLA PRINCIPAL ─────────────────
+  // PANTALLA PRINCIPAL
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -443,7 +442,7 @@ export default function Respiration478Screen({ navigation }) {
   );
 }
 
-// ───────────────── ESTILOS ─────────────────
+// ESTILOS 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
