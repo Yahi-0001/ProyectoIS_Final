@@ -5,6 +5,7 @@ import { useState } from 'react';
 import {
   Alert,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,9 +15,11 @@ import {
 } from 'react-native';
 
 //importamos la base de datos
-import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from '../config/firebaseConfig';
+
+
 
 export default function Registro({ navigation }) {
   const [correo, setCorreo] = useState('');
@@ -26,20 +29,13 @@ export default function Registro({ navigation }) {
   const [confirmarPassword, setConfirmarPassword] = useState('');
   const [genero, setGenero] = useState('');
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
+  const [mostrarTerminos, setMostrarTerminos] = useState(false);
   const [errores, setErrores] = useState({});
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
 
-  // nombre y apellidos
-  const [nombre, setNombre] = useState('');
-  const [apellidos, setApellidos] = useState('');
-
   const handleRegistro = async () => {
     let nuevosErrores = {};
-
-    // validaciones
-    if (!nombre) nuevosErrores.nombre = 'El nombre es obligatorio.';
-    if (!apellidos) nuevosErrores.apellidos = 'Los apellidos son obligatorios.';
 
     if (!correo) nuevosErrores.correo = 'El correo es obligatorio.';
     if (!password) nuevosErrores.password = 'La contraseña es obligatoria.';
@@ -59,9 +55,6 @@ export default function Registro({ navigation }) {
       const user = userCredential.user;
 
       await setDoc(doc(db, 'usuarios', user.uid), {
-        // guardar nombre y apellidos
-        nombre,
-        apellidos,
         correo,
         pais,
         telefono,
@@ -69,17 +62,26 @@ export default function Registro({ navigation }) {
         createdAt: new Date(),
       });
 
+      // Mensaje en pantalla
+      setMensajeExito(`¡Te has registrado correctamente como ${correo}!`);
 
-      //  CERRAR SESIÓN INMEDIATAMENTE
-      await signOut(auth);
-
-      //  NO PASA POR TEST
-      navigation.replace('Login', { email: correo });
-
-      Alert.alert(
-        'Registro exitoso 🎉',
-        'Te has registrado correctamente, ahora inicia sesión 💜'
-      );
+      // Alert con opción a ir al login, garantizado al primer clic
+      setTimeout(() => {
+        Alert.alert(
+          'Registro exitoso',
+          `¡Te has registrado correctamente como ${correo}! ¿Deseas ir al login?`,
+          [
+            {
+              text: 'Sí',
+              onPress: () => navigation.replace('Login', { email: correo }),
+            },
+            {
+              text: 'No',
+              style: 'cancel'
+            }
+          ]
+        );
+      }, 0);
 
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
@@ -102,6 +104,7 @@ export default function Registro({ navigation }) {
       }
     }
   };
+
 
   return (
     <LinearGradient colors={['#ffffffff', '#ffffffff']} style={{ flex: 1 }}>
@@ -126,28 +129,6 @@ export default function Registro({ navigation }) {
         <View style={styles.bottomWhiteContainer}>
           <View style={styles.container}>
             <Text style={styles.title}>Regístrate a Anxiously</Text>
-
-            {/*  Nombre */}
-            <Text style={styles.label}>Ingresa tu nombre</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre"
-              placeholderTextColor="#999"
-              value={nombre}
-              onChangeText={setNombre}
-            />
-            {errores.nombre && <Text style={styles.error}>{errores.nombre}</Text>}
-
-            {/* Apellidos */}
-            <Text style={styles.label}>Ingresa tus apellidos</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Apellidos"
-              placeholderTextColor="#999"
-              value={apellidos}
-              onChangeText={setApellidos}
-            />
-            {errores.apellidos && <Text style={styles.error}>{errores.apellidos}</Text>}
 
             {/* Correo */}
             <Text style={styles.label}>Ingresa tu correo electrónico</Text>
@@ -237,15 +218,19 @@ export default function Registro({ navigation }) {
             {errores.genero && <Text style={styles.error}>{errores.genero}</Text>}
 
             {/* Aceptar privacidad */}
-            <TouchableOpacity
-              style={styles.privacidadContainer}
-              onPress={() => setAceptaPrivacidad(!aceptaPrivacidad)}
-            >
-              <View style={[styles.checkbox, aceptaPrivacidad && styles.checkboxChecked]} />
-              <Text style={styles.privacidadText}>
+            <View style={styles.privacidadContainer}>
+              <TouchableOpacity onPress={() => setAceptaPrivacidad(!aceptaPrivacidad)}>
+                <View style={[styles.checkbox, aceptaPrivacidad && styles.checkboxChecked]} />
+              </TouchableOpacity>
+
+              <Text
+                style={styles.privacidadText}
+                onPress={() => setMostrarTerminos(true)}
+              >
                 Acepto los términos y condiciones de privacidad
               </Text>
-            </TouchableOpacity>
+            </View>
+
             {errores.privacidad && (
               <Text style={styles.error}>{errores.privacidad}</Text>
             )}
@@ -264,6 +249,57 @@ export default function Registro({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+        <Modal
+  visible={mostrarTerminos}
+  transparent
+  animationType="slide"
+>
+  <View style={{
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}>
+    <View style={{
+      width: '90%',
+      backgroundColor: '#fff',
+      borderRadius: 20,
+      padding: 20,
+    }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+        Términos y condiciones
+      </Text>
+
+      <ScrollView style={{ maxHeight: 300 }}>
+        <Text style={{ marginBottom: 10 }}>• Usarás la app de manera responsable.</Text>
+        <Text style={{ marginBottom: 10 }}>• Tus datos serán protegidos según la ley.</Text>
+        <Text style={{ marginBottom: 10 }}>• No compartiremos tu información sin permiso.</Text>
+        <Text style={{ marginBottom: 10 }}>• Puedes eliminar tu cuenta cuando lo desees.</Text>
+        <Text style={{ marginBottom: 10 }}>• Eres responsable de la información que proporciones.</Text>
+        <Text style={{ marginBottom: 10 }}>• Al aceptar, confirmas que leíste estos términos.</Text>
+      </ScrollView>
+
+      <TouchableOpacity
+        onPress={() => {
+          setAceptaPrivacidad(true);
+          setMostrarTerminos(false);
+        }}
+        style={{
+          marginTop: 15,
+          backgroundColor: '#7C3AED',
+          paddingVertical: 12,
+          borderRadius: 20,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: '#fff', fontWeight: '600' }}>
+          De acuerdo
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
       </ScrollView>
     </LinearGradient>
   );
@@ -315,22 +351,23 @@ const styles = StyleSheet.create({
   },
 
   loginButton: {
-    position: 'absolute',
-    top: 15,
-    left: 15,
+    position: 'absolute', // posición flotante
+    top: 15,              // distancia desde la parte superior
+    left: 15,             // ahora a la izquierda
     backgroundColor: '#7C3AED',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
-    zIndex: 10,
-    elevation: 5,
-  },
+    zIndex: 10,           // asegurarse que quede encima de la imagen
+    elevation: 5,         // para Android
+},
 
-  loginText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 14,
-  },
+loginText: {
+  color: 'white',
+  fontWeight: '600',
+  fontSize: 14,
+},
+
 
   inputPassword: { flex: 1, paddingVertical: 12, paddingRight: 10 },
 
@@ -344,3 +381,4 @@ const styles = StyleSheet.create({
   gradientButton: { width: '100%', paddingVertical: 14, borderRadius: 30, alignItems: 'center' },
   buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
 });
+
