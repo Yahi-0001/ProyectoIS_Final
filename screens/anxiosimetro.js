@@ -14,6 +14,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+//importamos base de datos
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../config/firebaseConfig";
+
+const auth = getAuth();
+
 import * as Notifications from "expo-notifications";
 
 const CONGRATS_IDS_KEY = "@congrats_notif_ids";
@@ -146,17 +153,42 @@ export default function Anxiosimetro({ navigation, route }) {
     await AsyncStorage.setItem(CONGRATS_IDS_KEY, JSON.stringify(ids));
   };
 
+  const obtenerGenero = async (uid) => {
+    try {
+      const docRef = doc(db, "usuarios", uid); // colección "usuarios"
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setGenero(data.genero); // "Femenino" o "Masculino"
+        setNombreUsuario(data.nombre || ""); // opcional: nombre
+      } else {
+        console.log("No existe el documento del usuario");
+      }
+    } catch (e) {
+      console.log("Error al obtener género:", e);
+    }
+  };
+
+
   useEffect(() => {
     inicializar();
 
     if (route?.params?.genero) {
-      setGenero(route.params.genero);
+      setGenero(route.params.genero); // sigue soportando parámetro
+    }
+
+    // obtener género desde la base de datos
+    if (auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      obtenerGenero(uid);
     }
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
 
   const inicializar = async () => {
     try {

@@ -44,7 +44,7 @@ export default function Login({navigation}) {
       //  Necesitas importar esto: signInWithEmailAndPassword
       await signInWithEmailAndPassword(auth, email, password);
 
-      Alert.alert('Éxito', 'Bienvenida 💜');
+      Alert.alert('Éxito', 'Bienvenid@ 💜');
 
       // Navegar a Test después del login exitoso
       navigation.replace('Test');
