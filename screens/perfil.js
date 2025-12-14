@@ -66,7 +66,7 @@ export default function ProfileScreen({ navigation }) {
   const [showConfig, setShowConfig] = useState(false);
   const configRotateAnim = useRef(new Animated.Value(0)).current;
 
-  // ✅ Feedback
+  // Feedback
   const [feedbackMsg, setFeedbackMsg] = useState("");
 
   const toggleConfig = () => {
@@ -276,23 +276,41 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth); // cierra sesión en Firebase
+    // Alerta de confirmación antes de cerrar sesión
+    Alert.alert(
+      "Cerrar sesión",
+      "¿Deseas cerrar sesión?",
+      [
+        {
+          text: "No",
+          onPress: () => console.log("Cierre de sesión cancelado"),
+          style: "cancel",
+        },
+        {
+          text: "Sí",
+          onPress: async () => {
+            try {
+              await signOut(auth); // cierra sesión en Firebase
 
-      // Opcional: limpiar estados locales
-      setName("");
-      setEmail("");
-      setPhone("");
+              // Limpiar estados locales
+              setName("");
+              setEmail("");
+              setPhone("");
 
-      // Navegar y borrar historial
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" }],
-      });
-    } catch (error) {
-      Alert.alert("Error", "No se pudo cerrar sesión");
-      console.log("Error al cerrar sesión:", error);
-    }
+              // Navegar y borrar historial
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
+            } catch (error) {
+              Alert.alert("Error", "No se pudo cerrar sesión");
+              console.log("Error al cerrar sesión:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleDeleteAccount = async () => {
