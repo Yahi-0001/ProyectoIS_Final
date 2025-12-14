@@ -328,7 +328,7 @@ export default function Anxiosimetro({ navigation, route }) {
 
               <View style={styles.saludoBox}>
                 <Text style={styles.saludoText}>
-                  Hola, {nombreUsuario}! No olvides que este proceso vale la pena.{"\n"}
+                  Hola {nombreUsuario}! No olvides que este proceso vale la pena.{"\n"}
                   {frases[fraseIndex]}
                 </Text>
               </View>
