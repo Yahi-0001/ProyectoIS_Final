@@ -12,7 +12,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+
+const TEST_REMINDER_DATE_KEY = "testDiarioReminderDate";
+const TEST_REMINDER_1120_KEY = "testDiarioReminder_1120";
+const TEST_REMINDER_1900_KEY = "testDiarioReminder_1900";
 
 const ejerciciosIniciales = [
   {
@@ -62,13 +80,105 @@ export default function CheckingScreen({ navigation }) {
   const [hiddenMap, setHiddenMap] = useState({}); // { [id]: hiddenUntilISO }
   const [testRealizadoHoy, setTestRealizadoHoy] = useState(false);
   const [testPersonalidadHecho, setTestPersonalidadHecho] = useState(false);
+  const [resultadoPersonalidad, setResultadoPersonalidad] = useState(null);
 
-  // NUEVO: controla si hoy ya se puede hacer el test (después de las 11:20)
+  // controla si hoy ya se puede hacer el test (después de las 11:20)
   const [puedeHacerTestHoy, setPuedeHacerTestHoy] = useState(false);
 
   useEffect(() => {
     cargarEstado();
   }, []);
+
+
+  const ensureNotifPermission = async () => {
+    // En emulador a veces no funcionan bien debemos probar en apk niñasss
+    if (!Device.isDevice) return false;
+
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === "granted") return true;
+
+    const req = await Notifications.requestPermissionsAsync();
+    return req.status === "granted";
+  };
+
+  const cancelTestReminders = async () => {
+    const id1120 = await AsyncStorage.getItem(TEST_REMINDER_1120_KEY);
+    const id1900 = await AsyncStorage.getItem(TEST_REMINDER_1900_KEY);
+
+    if (id1120) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(id1120);
+      } catch (e) {}
+    }
+    if (id1900) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(id1900);
+      } catch (e) {}
+    }
+
+    await AsyncStorage.multiRemove([
+      TEST_REMINDER_1120_KEY,
+      TEST_REMINDER_1900_KEY,
+      TEST_REMINDER_DATE_KEY,
+    ]);
+  };
+
+  const scheduleTestRemindersIfNeeded = async (hechoHoy) => {
+    // Si ya lo hizo hoy, cancelamos cualquier recordatorio pendiente.
+    if (hechoHoy) {
+      await cancelTestReminders();
+      return;
+    }
+
+    const ok = await ensureNotifPermission();
+    if (!ok) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const already = await AsyncStorage.getItem(TEST_REMINDER_DATE_KEY);
+
+
+    if (already === today) return;
+
+    const now = new Date();
+
+    const makeDate = (h, m) => {
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+
+
+      if (now > d) d.setSeconds(d.getSeconds() + 5);
+      return d;
+    };
+
+    const date1120 = makeDate(11, 20);
+    const date1900 = makeDate(19, 0);
+
+    const id1120 = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Test diario disponible 💜",
+        body: "No olvides responder tu test diario. Te tomará solo un minuto ✨",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: date1120,
+      },
+    });
+
+    const id1900 = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "¿Ya hiciste tu test diario? 💭",
+        body: "Aún estás a tiempo de registrar cómo te sentiste hoy 💜",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: date1900,
+      },
+    });
+
+    await AsyncStorage.setItem(TEST_REMINDER_1120_KEY, id1120);
+    await AsyncStorage.setItem(TEST_REMINDER_1900_KEY, id1900);
+    await AsyncStorage.setItem(TEST_REMINDER_DATE_KEY, today);
+  };
 
   const cargarEstado = async () => {
     try {
@@ -105,11 +215,13 @@ export default function CheckingScreen({ navigation }) {
       const hechoHoy = storedFechaTest === hoyStr;
       setTestRealizadoHoy(hechoHoy);
 
-      // ¿ya pasaron las 11:20 am?
+      //programar notis del test (11:20 y 19:00) si no lo ha hecho hoy
+      await scheduleTestRemindersIfNeeded(hechoHoy);
+
+      // ¿ya pasaron las 11:20 am? se desbloquea el test
       const hora = ahora.getHours(); // 0-23
       const minutos = ahora.getMinutes(); // 0-59
-      const yaEs1120 =
-        hora > 11 || (hora === 11 && minutos >= 20);
+      const yaEs1120 = hora > 11 || (hora === 11 && minutos >= 20);
 
       // puedes hacer el test SOLO si:
       // - todavía no lo hiciste hoy
@@ -120,6 +232,14 @@ export default function CheckingScreen({ navigation }) {
       const storedPers = await AsyncStorage.getItem("testPersonalidadHecho");
       if (storedPers === "SI") {
         setTestPersonalidadHecho(true);
+      }
+
+      // Leer resultado del test de personalidad (si existe)
+      const storedResultado = await AsyncStorage.getItem(
+        "testPersonalidadResultado_v1"
+      );
+      if (storedResultado) {
+        setResultadoPersonalidad(JSON.parse(storedResultado));
       }
     } catch (e) {
       console.log("Cargando nuestro Checking:", e);
@@ -146,18 +266,30 @@ export default function CheckingScreen({ navigation }) {
 
       setHiddenMap(map);
 
-      // Más adelante: navegar a pantalla de detalle
-      // navigation.navigate("PantallaEjercicios", {
-      //   ejercicioId: item.id,
-      //   titulo: item.titulo,
-      // });
+      if (item.id === 1) {
+        navigation.navigate("Respiracion");
+        return;
+      }
+
+      if (item.id === 2) {
+        navigation.navigate("Escaneo");
+      }
+
+      if (item.id === 3) {
+        navigation.navigate("Sentidos");
+        return;
+      }
+
+      if (item.id === 5) {
+        navigation.navigate("Autoabrazo");
+        return;
+      }
     } catch (e) {
       console.log("Error ocultando ejercicio:", e);
     }
   };
 
   const handleTestDiario = async () => {
-    // si ya lo hiciste hoy o todavía no es hora, no hace nada
     if (testRealizadoHoy || !puedeHacerTestHoy) {
       return;
     }
@@ -165,39 +297,34 @@ export default function CheckingScreen({ navigation }) {
     try {
       const hoyStr = new Date().toISOString().slice(0, 10);
       await AsyncStorage.setItem("ultimaFechaTest", hoyStr);
+
+
+      await cancelTestReminders();
+
       setTestRealizadoHoy(true);
-      setPuedeHacerTestHoy(false); // ya no se puede después de hacerlo
+      setPuedeHacerTestHoy(false);
       navigation.navigate("TestDiario");
     } catch (e) {
       console.log("Error guardando test diario:", e);
     }
   };
 
-  
-  // TEST PERSONALIDAD ------------------------------------------------
-const handleTestPersonalidad = async () => {
-  try {
-    const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
+  // TEST PERSONALIDAD ------------------------------------------------chanchan
+  const handleTestPersonalidad = async () => {
+    try {
+      const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
 
-    // Si ya está hecho → mostrar mensaje y bloquear
-    if (testYaHecho === "SI" || testPersonalidadHecho) {
-      setTestPersonalidadHecho(true);
-      alert("Ya completaste este test 💜");
-      return;
+      if (testYaHecho === "SI" || testPersonalidadHecho) {
+        setTestPersonalidadHecho(true);
+        alert("Ya completaste este test 💜");
+        return;
+      }
+
+      navigation.navigate("TestPersonalidad");
+    } catch (error) {
+      console.log("Error revisando test personalidad:", error);
     }
-
-    // Primera vez: marcar como hecho y navegar al test
-    await AsyncStorage.setItem("testPersonalidadHecho", "SI");
-    setTestPersonalidadHecho(true);
-    navigation.navigate("TestPersonalidad");
-
-  } catch (error) {
-    console.log("Error revisando test personalidad:", error);
-  }
-};
-
-  // --------------------------------------------------------------
-
+  };
 
   const handleLeerAnsiedad = () => {
     navigation.navigate("PantallaRapida");
@@ -210,13 +337,12 @@ const handleTestPersonalidad = async () => {
     return new Date(hiddenUntil) <= now;
   });
 
-  const canGoTestDiario =
-    !testRealizadoHoy && puedeHacerTestHoy;
+  const canGoTestDiario = !testRealizadoHoy && puedeHacerTestHoy;
 
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        {/* NAV BAR */}
+        {/*Barra de navegacion*/}
         <View style={styles.navBar}>
           {[
             ["stats-chart-outline", "Anxiósometro"],
@@ -262,7 +388,6 @@ const handleTestPersonalidad = async () => {
 
           {/* PRIORIDAD: TEST DIARIO */}
           <View style={styles.priorityCard}>
-            {/* Imagen del test diario */}
             <View style={styles.cardImageBox}>
               <Image
                 source={imagenTestDiario}
@@ -298,7 +423,6 @@ const handleTestPersonalidad = async () => {
 
           {/* SEGUNDO TEST: PERSONALIDAD */}
           <View style={styles.priorityCard}>
-            {/* Imagen test personalidad */}
             <View style={styles.cardImageBox}>
               <Image
                 source={imagenTestPersonalidad}
@@ -307,9 +431,7 @@ const handleTestPersonalidad = async () => {
               />
             </View>
 
-            <Text style={styles.priorityTitle}>
-              Descubre tu personalidad
-            </Text>
+            <Text style={styles.priorityTitle}>Descubre tu personalidad</Text>
             <Text style={styles.priorityText}>
               Un test para descubrir tu personalidad y explorar cómo actúa la
               ansiedad en ti.
@@ -325,7 +447,7 @@ const handleTestPersonalidad = async () => {
             >
               <Text style={styles.priorityButtonText}>
                 {testPersonalidadHecho
-                  ? "Test completado 💜"
+                  ? "Test completado"
                   : "Hacer test de personalidad"}
               </Text>
             </TouchableOpacity>
@@ -333,7 +455,6 @@ const handleTestPersonalidad = async () => {
 
           {/* INFO: LEER SOBRE LA ANSIEDAD */}
           <View style={styles.priorityCard}>
-            {/* Imagen info ansiedad */}
             <View style={styles.cardImageBox}>
               <Image
                 source={imagenInfoAnsiedad}
@@ -365,7 +486,6 @@ const handleTestPersonalidad = async () => {
           {/* LISTA DE EJERCICIOS */}
           {visibleEjercicios.map((item) => (
             <View key={item.id} style={styles.card}>
-              {/* Imagen del ejercicio */}
               <View style={styles.cardImageBox}>
                 <Image
                   source={imagenesEjercicios[item.id]}
@@ -431,12 +551,11 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
 
-  // Ajustar la misma medida para todos
   cardImageBox: {
     width: "100%",
     height: 120,
     borderRadius: 14,
-    overflow: "hidden", // para que la imagen respete el borde redondeado
+    overflow: "hidden",
     backgroundColor: "#EDE9FE",
     marginBottom: 12,
   },
@@ -445,7 +564,6 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  // PRIORIDAD (tests / info)
   priorityCard: {
     backgroundColor: "#F7EAFE",
     borderRadius: 18,
@@ -478,6 +596,31 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 14,
+  },
+
+  resultadoBox: {
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: "#F3E8FF",
+    borderWidth: 1,
+    borderColor: "#D8B4FE",
+  },
+  resultadoLabel: {
+    fontSize: 12,
+    color: "#6B21A8",
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  resultadoTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#4C1D95",
+    marginBottom: 4,
+  },
+  resultadoScore: {
+    fontSize: 12,
+    color: "#6B21A8",
   },
 
   titulo: {
@@ -530,4 +673,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
   },
-});
+}); 

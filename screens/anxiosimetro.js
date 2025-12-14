@@ -4,19 +4,47 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+//importamos base de datos
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../config/firebaseConfig";
+
+const auth = getAuth();
+
+import * as Notifications from "expo-notifications";
+
+const CONGRATS_IDS_KEY = "@congrats_notif_ids";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function Anxiosimetro({ navigation, route }) {
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+
+  // helpers solo para responsive (no cambia diseño, solo escala)
+  const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
+
+  const NAV_ITEM_W = SCREEN_WIDTH * 0.22;
+  const CARD_W = Math.min(SCREEN_WIDTH - 40, 430);
+  const IMAGE_SIZE = clamp(SCREEN_WIDTH * 0.45, 150, 190);
+  const BAR_H = clamp(SCREEN_WIDTH * 0.13, 50, 58);
+  const BAR_TRIANGLE_H = BAR_H;
+
   const [tiempo, setTiempo] = useState({
     dias: 0,
     horas: 0,
@@ -54,7 +82,6 @@ export default function Anxiosimetro({ navigation, route }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Heartbeat loop boton: crecer, contraer ligeramente, volver a normal
     Animated.loop(
       Animated.sequence([
         Animated.timing(scaleAnim, { toValue: 1.12, duration: 300, useNativeDriver: true }),
@@ -70,16 +97,91 @@ export default function Anxiosimetro({ navigation, route }) {
       Animated.timing(scaleAnim, { toValue: 0.86, duration: 110, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1.12, duration: 160, useNativeDriver: true }),
     ]).start(() => {
-      // vuelvo a la animación de heartbeat (la loop ya corre)
       scaleAnim.setValue(1.0);
     });
   };
+
+  // ---------- NOTIFICACIONES (solo felicitaciones) ----------
+  const ensureNotifPermission = async () => {
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === "granted") return true;
+
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === "granted";
+  };
+
+  const cancelCongratsScheduled = async () => {
+    try {
+      const raw = await AsyncStorage.getItem(CONGRATS_IDS_KEY);
+      const ids = raw ? JSON.parse(raw) : [];
+      for (let i = 0; i < ids.length; i++) {
+        await Notifications.cancelScheduledNotificationAsync(ids[i]);
+      }
+      await AsyncStorage.removeItem(CONGRATS_IDS_KEY);
+    } catch (e) {
+      console.log("Error cancelando felicitaciones:", e);
+    }
+  };
+
+  const scheduleCongratsForDays = async (inicioISO, daysToSchedule = 30) => {
+    const ok = await ensureNotifPermission();
+    if (!ok) return;
+
+    await cancelCongratsScheduled();
+
+    const inicio = new Date(inicioISO);
+    const ids = [];
+
+    for (let d = 1; d <= daysToSchedule; d++) {
+      const when = new Date(inicio);
+      when.setDate(when.getDate() + d);
+
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "¡Felicidades! 🎉",
+          body: `Hola, acabas de cumplir ${d} día${d === 1 ? "" : "s"} sin ansiedad 💜`,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: when,
+        },
+      });
+
+      ids.push(id);
+    }
+
+    await AsyncStorage.setItem(CONGRATS_IDS_KEY, JSON.stringify(ids));
+  };
+
+  const obtenerGenero = async (uid) => {
+    try {
+      const docRef = doc(db, "usuarios", uid); // colección "usuarios"
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setGenero(data.genero); // "Femenino" o "Masculino"
+        setNombreUsuario(data.nombre || ""); // opcional: nombre
+      } else {
+        console.log("No existe el documento del usuario");
+      }
+    } catch (e) {
+      console.log("Error al obtener género:", e);
+    }
+  };
+
 
   useEffect(() => {
     inicializar();
 
     if (route?.params?.genero) {
-      setGenero(route.params.genero);
+      setGenero(route.params.genero); // sigue soportando parámetro
+    }
+
+    // obtener género desde la base de datos
+    if (auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      obtenerGenero(uid);
     }
 
     return () => {
@@ -87,11 +189,13 @@ export default function Anxiosimetro({ navigation, route }) {
     };
   }, []);
 
+
   const inicializar = async () => {
     try {
       const fechaInicio = await AsyncStorage.getItem('inicioAnsiedad');
 
       if (fechaInicio) {
+        await scheduleCongratsForDays(fechaInicio, 30);
         startMonitoring(fechaInicio);
         return;
       }
@@ -99,6 +203,9 @@ export default function Anxiosimetro({ navigation, route }) {
       if (route?.params?.start) {
         const now = new Date().toISOString();
         await AsyncStorage.setItem('inicioAnsiedad', now);
+
+        await scheduleCongratsForDays(now, 30);
+
         startMonitoring(now);
         return;
       }
@@ -169,8 +276,7 @@ export default function Anxiosimetro({ navigation, route }) {
   return (
     <LinearGradient colors={['#f3e8ff', '#faf5ff']} style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        
-        {/* NAV BAR */}
+        {/* NAV BAR (queda fija arriba), ahora si ya no se les va mover en el celular jejesfg*/}
         <View style={styles.navBar}>
           {[
             ['stats-chart-outline', 'Anxiósometro'],
@@ -180,7 +286,7 @@ export default function Anxiosimetro({ navigation, route }) {
           ].map(([icon, label], i) => (
             <TouchableOpacity
               key={i}
-              style={styles.navItem}
+              style={[styles.navItem, { width: NAV_ITEM_W }]}
               onPress={() => {
                 setActiveNav(i);
 
@@ -200,8 +306,12 @@ export default function Anxiosimetro({ navigation, route }) {
           ))}
         </View>
 
-        {/* CONTENIDO */}
-        <View style={styles.content}>
+        
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={styles.title}>He estado sin ansiedad:</Text>
 
           {[
@@ -211,22 +321,22 @@ export default function Anxiosimetro({ navigation, route }) {
             ['#F9A8D4', 'segundos'],
           ].map(([color, label], i) => {
             const widths = [diaWidth, horWidth, minWidth, secWidth];
-            const values = [
-              tiempo.dias,
-              tiempo.horas,
-              tiempo.minutos,
-              tiempo.segundos,
-            ];
+            const values = [tiempo.dias, tiempo.horas, tiempo.minutos, tiempo.segundos];
 
             return (
-              <View key={i} style={styles.barContainer}>
+              <View key={i} style={[styles.barContainer, { height: BAR_H }]}>
                 <Animated.View
                   style={[
                     styles.barFill,
                     { width: widths[i], backgroundColor: color },
                   ]}
                 >
-                  <View style={[styles.triangle, { borderLeftColor: color }]} />
+                  <View
+                    style={[
+                      styles.triangle,
+                      { borderLeftColor: color, borderBottomWidth: BAR_TRIANGLE_H },
+                    ]}
+                  />
                 </Animated.View>
 
                 <Text style={styles.barText}>
@@ -236,24 +346,21 @@ export default function Anxiosimetro({ navigation, route }) {
             );
           })}
 
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-          >
-            <View style={styles.whiteCard}>
+         
+          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+            <View style={[styles.whiteCard, { width: CARD_W }]}>
               <Image
                 source={
                   genero === 'Femenino'
                     ? require('../assets/mujer.png')
                     : require('../assets/hombre.png')
                 }
-                style={styles.image}
+                style={[styles.image, { width: IMAGE_SIZE, height: IMAGE_SIZE }]}
               />
 
               <View style={styles.saludoBox}>
                 <Text style={styles.saludoText}>
-                  Hola, {nombreUsuario}! No olvides que este proceso vale la pena.{"\n"}
+                  Hola {nombreUsuario}! No olvides que este proceso vale la pena.{"\n"}
                   {frases[fraseIndex]}
                 </Text>
               </View>
@@ -262,13 +369,13 @@ export default function Anxiosimetro({ navigation, route }) {
                 {!monitorActivo ? (
                   <TouchableOpacity
                     style={styles.monitorButton}
-                    onPress={() => {
-                      AsyncStorage.setItem(
-                        'inicioAnsiedad',
-                        new Date().toISOString()
-                      ).then(() => {
-                        startMonitoring();
-                      });
+                    onPress={async () => {
+                      const now = new Date().toISOString();
+                      await AsyncStorage.setItem('inicioAnsiedad', now);
+
+                      await scheduleCongratsForDays(now, 30);
+
+                      startMonitoring(now);
                     }}
                   >
                     <Text style={styles.monitorText}>Iniciar Monitoreo</Text>
@@ -276,7 +383,6 @@ export default function Anxiosimetro({ navigation, route }) {
                 ) : (
                   <View style={{ alignItems: 'center', width: '100%' }}>
                     <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
-                      {/* Yellow glow detrás (difuso) */}
                       <View style={styles.yellowGlow} />
 
                       <TouchableOpacity
@@ -286,6 +392,9 @@ export default function Anxiosimetro({ navigation, route }) {
                           hacerPop();
                           const now = new Date().toISOString();
                           await AsyncStorage.setItem('inicioAnsiedad', now);
+
+                          await scheduleCongratsForDays(now, 30);
+
                           startMonitoring(now);
                           navigation.navigate("PantallaEjercicios");
                         }}
@@ -300,13 +409,11 @@ export default function Anxiosimetro({ navigation, route }) {
               </View>
             </View>
           </ScrollView>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -321,7 +428,6 @@ const styles = StyleSheet.create({
 
   navItem: {
     alignItems: 'center',
-    width: SCREEN_WIDTH * 0.22,
   },
 
   navLabelActive: {
@@ -331,10 +437,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  content: {
-    flex: 1,
+  // estilo para el Scroll vertical
+  scrollContent: {
     alignItems: 'center',
     padding: 10,
+    paddingBottom: 30, // para que no se corte abajo
     marginTop: 10,
   },
 
@@ -347,7 +454,6 @@ const styles = StyleSheet.create({
 
   barContainer: {
     width: '90%',
-    height: 55,
     backgroundColor: '#9ea1a5ff',
     borderRadius: 14,
     marginVertical: 6,
@@ -376,7 +482,6 @@ const styles = StyleSheet.create({
     right: -9,
     width: 0,
     height: '100%',
-    borderBottomWidth: 55,
     borderLeftWidth: 10,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
@@ -384,17 +489,15 @@ const styles = StyleSheet.create({
 
   whiteCard: {
     backgroundColor: 'white',
-    width: SCREEN_WIDTH - 40,
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 10,
     alignItems: 'center',
     elevation: 6,
+    marginBottom: 14, // para que el scroll tenga aire
   },
 
   image: {
-    width: 180,
-    height: 180,
     marginVertical: 10,
     borderRadius: 12,
   },
@@ -434,7 +537,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
- 
   fabButton: {
     width: 64,
     height: 64,
@@ -442,7 +544,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#7C3AED',
     justifyContent: 'center',
     alignItems: 'center',
-    // sombra blanca suave sobre el botón
     shadowColor: '#7C3AED',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.22,
@@ -451,13 +552,12 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
 
-
   yellowGlow: {
     position: 'absolute',
     width: 94,
     height: 94,
     borderRadius: 47,
-    backgroundColor: 'rgba(250,204,21,0.16)', // amarillo suave
+    backgroundColor: 'rgba(250,204,21,0.16)',
     shadowColor: '#edd26693',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
@@ -472,10 +572,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     fontWeight: '700',
-    color: '#4B2771', // morado oscuro
+    color: '#4B2771',
     textTransform: 'lowercase',
   },
-
 
   btnLabel: {
     marginTop: 8,

@@ -1,17 +1,17 @@
-// App.js
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
 import {
   SafeAreaView,
-  View,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
+  View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // 👈 NUEVO
 
-// ========================= PREGUNTAS =========================
+
 const QUESTIONS = [
   // SECCIÓN 1 — Personalidad
   {
@@ -203,7 +203,7 @@ const QUESTIONS = [
   },
 ];
 
-// ========================= TEXTO DE RESULTADOS =========================
+//  TEXTO DE RESULTADOS 
 const getResultText = (score) => {
   if (score <= 25) {
     return {
@@ -248,9 +248,9 @@ const getResultText = (score) => {
   }
 };
 
-// ========================= APP =========================
+//  APP 
 export default function App() {
-  const navigation = useNavigation(); // 👈 NUEVO
+  const navigation = useNavigation(); 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
@@ -278,22 +278,42 @@ export default function App() {
   const score = Object.values(answers).reduce((acc, v) => acc + (v || 0), 0);
   const resultInfo = getResultText(score);
 
-  const handleSave = () => {
-    if (savedResult) return;
-    const dataToSave = {
-      score,
-      answers,
-      createdAt: new Date().toISOString(),
-    };
+  const handleSave = async () => {
+  if (savedResult) return;
+
+  const dataToSave = {
+    score,
+    answers,
+    createdAt: new Date().toISOString(),
+    title: resultInfo.title, // usamos el título del perfil
+  };
+
+  try {
+    // 1) marcar que el test YA se hizo
+    await AsyncStorage.setItem("testPersonalidadHecho", "SI");
+
+    // 2) guardar resumen de resultado para Calendario
+    await AsyncStorage.setItem(
+      "testPersonalidadResultado_v1",
+      JSON.stringify({
+        score: dataToSave.score,
+        title: dataToSave.title,
+      })
+    );
+
     setSavedResult(dataToSave);
     console.log("Resultado guardado:", dataToSave);
-  };
+  } catch (e) {
+    console.log("Error guardando test personalidad:", e);
+  }
+};
+
 
   const handleGoBackToAnxiosimetro = () => {
-    navigation.navigate("Anxiosimetro"); // 👈 vuelve a la pantalla Checking
+    navigation.navigate("Anxiosimetro"); 
   };
 
-  // ========================= PANTALLA RESULTADO =========================
+  // PANTALLA RESULTADO 
   if (showResult || savedResult) {
     return (
       <SafeAreaView style={styles.container}>
@@ -379,7 +399,7 @@ export default function App() {
     );
   }
 
-  // ========================= PANTALLA PREGUNTAS =========================
+  //  PANTALLA PREGUNTAS 
   const selectedValue = answers[currentQuestion.id];
 
   return (
@@ -454,7 +474,7 @@ export default function App() {
   );
 }
 
-// ========================= ESTILOS =========================
+//  ESTILOS 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -472,7 +492,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  // ─── TIPOGRAFÍA GENERAL ─────────────────────
+  // TIPOGRAFÍA GENERAL 
   appTitle: {
     fontSize: 30,
     fontWeight: "900",
@@ -497,7 +517,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // ─── CARD DE PREGUNTA ───────────────────────
+  // CARD DE PREGUNTA
   questionCard: {
     marginTop: 26,
     padding: 24,
@@ -557,7 +577,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 
-  // ─── BOTÓN PRINCIPAL ────────────────────────
+  //  BOTÓN PRINCIPAL
   primaryButton: {
     width: "100%",
     paddingVertical: 18,
@@ -584,7 +604,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  // ─── RESULTADO ──────────────────────────────
+  //  RESULTADO 
   resultCard: {
     marginTop: 16,
     padding: 22,
@@ -617,7 +637,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ─── NUEVA TARJETA TIP ──────────────────────
+  // NUEVA TARJETA TIP 
   tipCard: {
     marginTop: 18,
     padding: 18,
@@ -637,7 +657,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ─── BOX DE GUARDAR ─────────────────────────
+  //  BOX DE GUARDAR
   savedBox: {
     marginTop: 18,
     padding: 18,
@@ -657,7 +677,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ─── BOTÓN SECUNDARIO (SALIR) ───────────────
+  // BOTÓN SECUNDARIO (SALIR)
   secondaryButton: {
     marginTop: 14,
     paddingVertical: 14,

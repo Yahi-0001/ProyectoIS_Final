@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import {
-  View,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Image,
+  View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Picker } from '@react-native-picker/picker';
-import { Ionicons } from '@expo/vector-icons';
+
+//importamos la base de datos
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from '../config/firebaseConfig';
+
+
 
 export default function Registro({ navigation }) {
   const [correo, setCorreo] = useState('');
@@ -20,16 +29,17 @@ export default function Registro({ navigation }) {
   const [confirmarPassword, setConfirmarPassword] = useState('');
   const [genero, setGenero] = useState('');
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
+  const [mostrarTerminos, setMostrarTerminos] = useState(false);
   const [errores, setErrores] = useState({});
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
 
-  const handleRegistro = () => {
+  const handleRegistro = async () => {
     let nuevosErrores = {};
+
     if (!correo) nuevosErrores.correo = 'El correo es obligatorio.';
     if (!password) nuevosErrores.password = 'La contraseña es obligatoria.';
-    if (!confirmarPassword)
-      nuevosErrores.confirmarPassword = 'Confirma tu contraseña.';
+    if (!confirmarPassword) nuevosErrores.confirmarPassword = 'Confirma tu contraseña.';
     else if (password !== confirmarPassword)
       nuevosErrores.confirmarPassword = 'Las contraseñas no coinciden.';
     if (!genero) nuevosErrores.genero = 'Selecciona tu sexo.';
@@ -38,10 +48,63 @@ export default function Registro({ navigation }) {
 
     setErrores(nuevosErrores);
 
-    if (Object.keys(nuevosErrores).length === 0) {
-      navigation.navigate('Login', { email: correo });
+    if (Object.keys(nuevosErrores).length > 0) return; // Salir si hay errores
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, correo, password);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, 'usuarios', user.uid), {
+        correo,
+        pais,
+        telefono,
+        genero,
+        createdAt: new Date(),
+      });
+
+      // Mensaje en pantalla
+      setMensajeExito(`¡Te has registrado correctamente como ${correo}!`);
+
+      // Alert con opción a ir al login, garantizado al primer clic
+      setTimeout(() => {
+        Alert.alert(
+          'Registro exitoso',
+          `¡Te has registrado correctamente como ${correo}! ¿Deseas ir al login?`,
+          [
+            {
+              text: 'Sí',
+              onPress: () => navigation.replace('Login', { email: correo }),
+            },
+            {
+              text: 'No',
+              style: 'cancel'
+            }
+          ]
+        );
+      }, 0);
+
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert(
+          'Correo ya registrado',
+          'Este correo ya tiene una cuenta. ¿Deseas ir al login?',
+          [
+            {
+              text: 'Sí',
+              onPress: () => navigation.navigate('Login', { email: correo }),
+            },
+            {
+              text: 'No',
+              style: 'cancel'
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', error.message);
+      }
     }
   };
+
 
   return (
     <LinearGradient colors={['#ffffffff', '#ffffffff']} style={{ flex: 1 }}>
@@ -155,15 +218,19 @@ export default function Registro({ navigation }) {
             {errores.genero && <Text style={styles.error}>{errores.genero}</Text>}
 
             {/* Aceptar privacidad */}
-            <TouchableOpacity
-              style={styles.privacidadContainer}
-              onPress={() => setAceptaPrivacidad(!aceptaPrivacidad)}
-            >
-              <View style={[styles.checkbox, aceptaPrivacidad && styles.checkboxChecked]} />
-              <Text style={styles.privacidadText}>
+            <View style={styles.privacidadContainer}>
+              <TouchableOpacity onPress={() => setAceptaPrivacidad(!aceptaPrivacidad)}>
+                <View style={[styles.checkbox, aceptaPrivacidad && styles.checkboxChecked]} />
+              </TouchableOpacity>
+
+              <Text
+                style={styles.privacidadText}
+                onPress={() => setMostrarTerminos(true)}
+              >
                 Acepto los términos y condiciones de privacidad
               </Text>
-            </TouchableOpacity>
+            </View>
+
             {errores.privacidad && (
               <Text style={styles.error}>{errores.privacidad}</Text>
             )}
@@ -182,6 +249,57 @@ export default function Registro({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+        <Modal
+  visible={mostrarTerminos}
+  transparent
+  animationType="slide"
+>
+  <View style={{
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}>
+    <View style={{
+      width: '90%',
+      backgroundColor: '#fff',
+      borderRadius: 20,
+      padding: 20,
+    }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+        Términos y condiciones
+      </Text>
+
+      <ScrollView style={{ maxHeight: 300 }}>
+        <Text style={{ marginBottom: 10 }}>• Usarás la app de manera responsable.</Text>
+        <Text style={{ marginBottom: 10 }}>• Tus datos serán protegidos según la ley.</Text>
+        <Text style={{ marginBottom: 10 }}>• No compartiremos tu información sin permiso.</Text>
+        <Text style={{ marginBottom: 10 }}>• Puedes eliminar tu cuenta cuando lo desees.</Text>
+        <Text style={{ marginBottom: 10 }}>• Eres responsable de la información que proporciones.</Text>
+        <Text style={{ marginBottom: 10 }}>• Al aceptar, confirmas que leíste estos términos.</Text>
+      </ScrollView>
+
+      <TouchableOpacity
+        onPress={() => {
+          setAceptaPrivacidad(true);
+          setMostrarTerminos(false);
+        }}
+        style={{
+          marginTop: 15,
+          backgroundColor: '#7C3AED',
+          paddingVertical: 12,
+          borderRadius: 20,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: '#fff', fontWeight: '600' }}>
+          De acuerdo
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
       </ScrollView>
     </LinearGradient>
   );

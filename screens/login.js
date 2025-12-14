@@ -3,95 +3,180 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import {
   Alert,
+  Dimensions,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
-export default function Login({ navigation }) {
+//base de datos 
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig';
+
+
+
+
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const isSmallDevice = SCREEN_HEIGHT < 700;
+
+
+export default function Login({navigation}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (email && password) {
-      navigation.navigate('Test'); // pantalla de prueba
-    } else {
+  const handleLogin = async () => {
+    if (!email || !password) {
       Alert.alert('Error', 'Ingresa correo y contraseña');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      //  Necesitas importar esto: signInWithEmailAndPassword
+      await signInWithEmailAndPassword(auth, email, password);
+
+      Alert.alert('Éxito', 'Bienvenid@ 💜');
+
+      // Navegar a Test después del login exitoso
+      navigation.replace('Test');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <LinearGradient
-      colors={['#ffffff','#ffffff']}
+      colors={['#fdf2ff', '#e0f2fe']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.background}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        
-        {/* --- Título --- */}
-        <Text style={styles.title}>Bienvenido a Anxiously</Text>
-        <Text style={styles.subtitle}>
-         Iniciar sesión
-        </Text>
-
-        
-        {/* --- Imagen ilustración --- */}
-        <Image
-          source={require('../assets/loginIllustration.png')}
-          style={styles.image}
-        />
-
-        
-        {/* --- Input correo --- */}
-        <View style={[styles.inputBox, { flexDirection: 'row', alignItems: 'center', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 15 }]}>
-          <MaterialIcons name="email" size={20} color="#7C3AED" style={{ marginRight: 10 }} />
-          <TextInput
-            placeholder="Ingresa tu correo electrónico o número"
-            placeholderTextColor="#7F7F7F"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            style={[styles.input, { flex: 1 }]}
-          />
-        </View>
-
-        {/* --- Input contraseña --- */}
-        <View style={[styles.inputBox,{ backgroundColor: '#cebceaff', flexDirection: 'row', 
-          alignItems: 'center', paddingVertical: 6, borderRadius: 20 }]}>
-          <MaterialIcons name="lock" size={20} color="#7C3AED" style={{ marginRight: 10 }} />
-          <TextInput
-            placeholder="Ingresa tu contraseña"
-            placeholderTextColor="#7F7F7F"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            style={[styles.input, { flex: 1 }]}
-          />
-        </View>
-
-        {/* --- Botón iniciar sesión --- */}
-        <TouchableOpacity onPress={handleLogin} style={styles.buttonContainer}>
-          <LinearGradient
-            colors={['#5B0EAD', '#5B0EAD']}
-            style={styles.button}
+      <SafeAreaView style={{ flex: 1 }}>
+        {/*Esto hace que la pantalla se mueva con el teclado */}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <ScrollView
+            contentContainerStyle={styles.container}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.buttonText}>INICIAR SESIÓN</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            {/* ENCABEZADO */}
+            <Text style={styles.appName}>Anxiously 💜</Text>
+            <Text style={styles.title}>Bienvenida de nuevo</Text>
+            <Text style={styles.subtitle}>
+              Este es tu espacio seguro para respirar y sentirte mejor.
+            </Text>
 
-        {/* --- Footer registrar --- */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>¿Aún no tienes una cuenta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
-            <Text style={styles.register}>Registrarse</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            {/* CHIPS MOTIVACIONALES */}
+            <View style={styles.chipsRow}>
+              <View style={[styles.chip, { backgroundColor: '#ede9fe' }]}>
+                <Text style={styles.chipText}>Respira profundo 🌬️</Text>
+              </View>
+              <View style={[styles.chip, { backgroundColor: '#fee2e2' }]}>
+                <Text style={styles.chipText}>Sé amable contigo 💕</Text>
+              </View>
+            </View>
+
+            {/* TARJETA DEL FORMULARIO */}
+            <View style={styles.card}>
+              {/* Imagen */}
+              <Image
+                source={require('../assets/loginIllustration.png')}
+                style={styles.image}
+              />
+
+              {/* TÍTULO DENTRO DEL CARD */}
+              <Text style={styles.cardTitle}>Iniciar sesión</Text>
+              <Text style={styles.cardSubtitle}>
+                Ingresa tus datos para continuar con tu proceso de calma.
+              </Text>
+
+              {/* Input correo */}
+              <View style={styles.inputBox}>
+                <MaterialIcons
+                  name="email"
+                  size={20}
+                  color="#7C3AED"
+                  style={{ marginRight: 10 }}
+                />
+                <TextInput
+                  placeholder="Correo electrónico o número"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  style={styles.input}
+                  returnKeyType="next"
+                />
+              </View>
+
+              {/* Input contraseña */}
+              <View style={styles.inputBox}>
+                <MaterialIcons
+                  name="lock"
+                  size={20}
+                  color="#7C3AED"
+                  style={{ marginRight: 10 }}
+                />
+                <TextInput
+                  placeholder="Contraseña"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.input}
+                  returnKeyType="done"
+                />
+              </View>
+
+              {/* Botón iniciar sesión */}
+              <TouchableOpacity
+                onPress={handleLogin}
+                style={styles.buttonContainer}
+              >
+                <LinearGradient
+                  colors={['#5B0EAD', '#ec4899']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.button}
+                >
+                  <Text style={styles.buttonText}>INICIAR SESIÓN</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Frase pequeña */}
+              <Text style={styles.helperText}>
+                🌸 Recuerda: no tienes que estar perfecta para empezar, solo
+                presente.
+              </Text>
+
+              {/* Footer registrar */}
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>¿Aún no tienes una cuenta? </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Registro')}
+                >
+                  <Text style={styles.register}>Registrarse</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
@@ -104,63 +189,142 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 30,
+    paddingHorizontal: 24,
+    paddingVertical: isSmallDevice ? 20 : 32,
+    paddingBottom: 40, // un extra para que pueda subir sobre el teclado
   },
-  image: {
-    width: 550,
-    height: 500,
-    resizeMode: 'contain',
-    marginBottom: 20,
+
+  // TEXTOS ARRIBA
+  appName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#4C1D95',
+    marginBottom: 4,
+    textAlign: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: 10,
-    color: '#111',
+    color: '#111827',
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 25,
+    fontSize: 13,
+    color: '#6B7280',
     textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 14,
   },
-  inputBox: {
-    width: '100%',
-    backgroundColor: '#cebceaff',
+
+  // CHIPS SUPERIORES
+  chipsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 12,
     paddingVertical: 6,
+    borderRadius: 999,
+  },
+  chipText: {
+    fontSize: 12,
+    color: '#4B5563',
+  },
+
+  // CARD
+  card: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
     paddingHorizontal: 20,
-    borderRadius: 30,
-    marginBottom: 15,
+    paddingVertical: isSmallDevice ? 18 : 22,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  image: {
+    width: SCREEN_WIDTH * 0.6,
+    height: SCREEN_WIDTH * 0.55,
+    maxHeight: 260,
+    alignSelf: 'center',
+    resizeMode: 'contain',
+    marginBottom: isSmallDevice ? 8 : 12,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+    textAlign: 'left',
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginBottom: 16,
+  },
+
+  // INPUTS
+  inputBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: '#F9FAFB',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   input: {
-    fontSize: 16,
-    color: '#000',
+    flex: 1,
+    fontSize: 14,
+    color: '#111827',
   },
+
+  // BOTÓN
   buttonContainer: {
     width: '100%',
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   button: {
-    paddingVertical: 15,
-    borderRadius: 25,
+    paddingVertical: 14,
+    borderRadius: 22,
     alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 15,
   },
+
+  helperText: {
+    fontSize: 11,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 10,
+    marginTop: 2,
+  },
+
+  // FOOTER
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 4,
   },
   footerText: {
-    color: '#555',
+    color: '#6B7280',
+    fontSize: 13,
   },
   register: {
     color: '#7C3AED',
     fontWeight: '700',
+    fontSize: 13,
   },
 });

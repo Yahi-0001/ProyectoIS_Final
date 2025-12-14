@@ -20,3 +20,4 @@
    **Responsable:** Scrum master  
    **Resolución:** buscar la forma de que solo se haga una vez por día preeviendo que se implementará un sistema de mensajes.
    **Fecha resuelto:** 08/12/2025  
+

@@ -181,18 +181,16 @@ para obtener apoyo inmediato cuando me siento mal.
 **Story Points:** 2  
 
 ---
-### **HU-11 – Creación de base de datos local**  
+### **HU-11 – Creación de base de datos en la nube**  
  
 
-**Como usuario**,  
-quiero que la app tenga una base de datos local,  
-para que pueda guardar y consultar información sin depender de internet.
+**Como usuario**
+quiero que la app tenga una base de datos en la nube,  
+para que pueda guardar y consultar información.
 
 **Criterios de aceptación:**  
-- La app crea automáticamente la base de datos al abrirse por primera vez.  
-- Funciona completamente sin conexión.  
 - Se almacena solo la información necesaria (sin datos sensibles).  
-- Permite guardar ejercicios, frases calmantes y registros necesarios para la app.  
+- Permite guardar registros necesarios para la app.  
 
 **Prioridad:** Alta  
 **Story Points:** 5
@@ -214,5 +212,23 @@ para conocer mi estado y recibir orientación inmediata según mis respuestas.
 
 **Prioridad:** Media  
 **Story Points:** 3  
+
+---
+
+### **HU-13 – Actualización general de la app para mejorar la experiencia del usuario**
+
+**Como usuario**,  
+quiero que la aplicación se actualice con nuevas mejoras y correcciones,  
+para tener una experiencia más fluida, estable y útil dentro de la app.
+
+
+### **Criterios de aceptación**
+- La app debe incluir correcciones de errores reportados en versiones anteriores.  
+- Las pantallas deben cargar más rápido tras la actualización.  
+- La actualización no elimina información guardada previamente por el usuario.   
+
+
+**Prioridad:** Alta  
+**Story Points:** 3
 
 ---
