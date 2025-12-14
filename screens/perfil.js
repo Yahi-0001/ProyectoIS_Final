@@ -699,6 +699,42 @@ const rotateConfigChevron = configRotateAnim.interpolate({
       <Text style={styles.helpAnswer}> </Text>
       <Text style={styles.helpAnswer}>Esta app fue creada con cariño para acompañarte, no para exigirte.</Text>
     </View>
+
+    <View style={{ marginTop: 16 }}>
+  <Text style={styles.helpQuestion}>
+    ¿Te resultó útil esta información?
+  </Text>
+
+  <View style={{ flexDirection: "row", marginTop: 8 }}>
+    <TouchableOpacity
+      style={{
+        backgroundColor: "#7C3AED",
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+        marginRight: 10,
+      }}
+    >
+      <Text style={{ color: "#fff", fontWeight: "600" }}>
+        Sí 💜
+      </Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={{
+        backgroundColor: "#E5E7EB",
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+      }}
+    >
+      <Text style={{ color: "#374151", fontWeight: "600" }}>
+        No 🤍
+      </Text>
+    </TouchableOpacity>
+  </View>
+</View>
+
   </View>
 )}
 
