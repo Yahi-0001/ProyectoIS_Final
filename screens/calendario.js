@@ -54,7 +54,7 @@ export default function CalendarioEmocional({ navigation }) {
     { label: "Calmado 😌", color: "#81C784", value: 4 },
   ];
 
-  // Load storage
+
   useEffect(() => {
     (async () => {
       try {
@@ -88,21 +88,21 @@ export default function CalendarioEmocional({ navigation }) {
     })();
   }, []);
 
-  // Save emotions on change
+  
   useEffect(() => {
     AsyncStorage.setItem("dayFeelings_v1", JSON.stringify(dayFeelings)).catch(
       (e) => console.warn("Error saving feelings:", e)
     );
   }, [dayFeelings]);
 
-  // Save notes on change
+  // guardar nots
   useEffect(() => {
     AsyncStorage.setItem("dayNotes_v1", JSON.stringify(dayNotes)).catch((e) =>
       console.warn("Error saving notes:", e)
     );
   }, [dayNotes]);
 
-  // Save emotion (hasta 2 por día)
+  // guardar emotion (hasta 2 por día)
   const saveFeeling = (date, emotion) => {
     if (!date) return Alert.alert("Selecciona una fecha primero");
 
@@ -129,7 +129,7 @@ export default function CalendarioEmocional({ navigation }) {
     setDayFeelings(updated);
   };
 
-  // Guardar nota del día seleccionado (solo hoy)
+  // Guardar nota del día seleccionado
   const saveNoteForSelectedDay = () => {
     if (!selectedDay) {
       return Alert.alert("Selecciona una fecha primero");
@@ -293,7 +293,7 @@ export default function CalendarioEmocional({ navigation }) {
     <LinearGradient colors={["#f3e8ff", "#faf5ff"]} style={styles.screen}>
       <StatusBar backgroundColor="#7C3AED" barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
-        {/* NAV BAR IGUAL A ANXIOSIMETRO (pero sin saltito) */}
+        
         <View style={styles.navBar}>
           {[
             ["stats-chart-outline", "Anxiósometro"],
@@ -319,7 +319,7 @@ export default function CalendarioEmocional({ navigation }) {
                 color={activeNav === i ? "#7C3AED" : "#9CA3AF"}
               />
 
-              {/* ✅ SIEMPRE está (evita brinco). Solo cambia opacidad */}
+              
               <Text
                 style={[
                   styles.navLabelActive,
@@ -332,7 +332,7 @@ export default function CalendarioEmocional({ navigation }) {
           ))}
         </View>
 
-        {/* CONTENIDO BLANCO (TU DISEÑO ORIGINAL) */}
+        
         <View style={styles.container}>
           <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
             <Text style={styles.title}>Calendario Emocional</Text>
@@ -440,7 +440,7 @@ export default function CalendarioEmocional({ navigation }) {
               </View>
             )}
 
-            {/* Gráfica */}
+            {/* Grafica */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Semana / Histórico</Text>
 
@@ -474,14 +474,14 @@ export default function CalendarioEmocional({ navigation }) {
               )}
             </View>
 
-            {/* Botón PDF */}
+            {/* Boton PDF, debemos probar en apk niñasss */}
             <View style={styles.actions}>
               <TouchableOpacity style={styles.pdfBtn} onPress={exportToPDF}>
                 <Text style={styles.pdfBtnText}>📄 Exportar reporte (PDF)</Text>
               </TouchableOpacity>
             </View>
 
-            {/* 🌸 Test de personalidad */}
+            {/*test de personalidad */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Tu test de personalidad</Text>
 
@@ -552,7 +552,7 @@ export default function CalendarioEmocional({ navigation }) {
   );
 }
 
-/** ========== Día personalizado para el calendario (dos colores) ========== */
+// dos colores en el calendario
 function DayWithEmotions({
   date,
   state,
@@ -632,7 +632,7 @@ function DayWithEmotions({
   );
 }
 
-/* =============== STYLES =============== */
+//styles
 const styles = StyleSheet.create({
   screen: { flex: 1 },
 
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: screenWidth * 0.22,
 
-    // ✅ FIX: alto estable para que no brinque cuando el label aparece/desaparece
+ 
     height: 48,
     justifyContent: "center",
   },
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
 
-  // 🌸 estilos test de personalidad
+  // estilos test de personalidad
   personalityReminderBox: {
     marginTop: 8,
     padding: 14,

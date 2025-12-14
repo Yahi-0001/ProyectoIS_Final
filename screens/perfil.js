@@ -30,14 +30,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 
-//  para respetar status bar (batería/hora) y NO pegarse arriba
+// para respetar status bar (batería/hora) y NO pegarse arriba
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 //importamos la base de datos
 import { deleteUser, signOut } from "firebase/auth";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebaseConfig";
-
 
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -104,14 +103,14 @@ const rotateConfigChevron = configRotateAnim.interpolate({
   const [activeNav, setActiveNav] = useState(3);
 
   // cositas interactivas del perfil
-  const [mood, setMood] = useState("Tranquila 😌");
+  const [mood, setMood] = useState("Tranquila");
   const [goal, setGoal] = useState("3 chequeos al día");
   const [notificationsOn, setNotificationsOn] = useState(true);
 
   const [calmStreak, setCalmStreak] = useState(0);
   const [sessionsCount, setSessionsCount] = useState(0);
 
-  // ---------- helpers de fecha (local) ----------
+  
   const getLocalDateKey = (date = new Date()) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -125,7 +124,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     return getLocalDateKey(d);
   };
 
-  // ---------- cargar contadores al entrar a Perfil ----------
+  // cargar contadores al entrar a Perfil
   const loadCounters = async () => {
     const streakSaved = await AsyncStorage.getItem("@calm_streak");
     const sessionsSaved = await AsyncStorage.getItem("@sessions_count");
@@ -134,7 +133,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     setSessionsCount(sessionsSaved ? Number(sessionsSaved) : 0);
   };
 
-  // ---------- preferencias: cargar ----------
+  //preferencias: cargar
   const loadPreferences = async () => {
     const raw = await AsyncStorage.getItem(PREFS_KEY);
     if (!raw) return;
@@ -150,7 +149,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     }
   };
 
-  // ---------- preferencias: guardar ----------
+  //  preferencias: guardar
   const savePreferences = async (nextGoal, nextNotificationsOn) => {
     await AsyncStorage.setItem(
       PREFS_KEY,
@@ -158,7 +157,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     );
   };
 
-  // ---------- notificaciones: permisos ----------
+  // notificaciones: permisos
   const ensureNotifPermission = async () => {
     if (!Device.isDevice) {
       // emulador: puede variar, pero seguimos
@@ -171,13 +170,13 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     return status === "granted";
   };
 
-  // ---------- notificaciones: cancelar ----------
+  //notificaciones: cancelar
   const cancelScheduled = async () => {
     await Notifications.cancelAllScheduledNotificationsAsync();
     await AsyncStorage.removeItem(NOTIF_IDS_KEY);
   };
 
-  // ---------- notificaciones: programar según meta ----------
+  // notificaciones: programar según meta 
   const scheduleForGoal = async (nextGoal) => {
     await cancelScheduled();
 
@@ -223,7 +222,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     }, [])
   );
 
-  // ---------- racha: registrar “Tranquila” 1 vez por día ----------
+  // racha: registrar “Tranquila” 1 vez por día 
   const registerCalmDay = async () => {
     const today = getLocalDateKey();
     const yesterday = getYesterdayKey();
@@ -245,7 +244,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
     setCalmStreak(streak);
   };
 
-  // ---------- sesiones: sumar 1 ----------
+  //  sesiones: sumar 1 al tocar el button
   const addSession = async () => {
     const saved = await AsyncStorage.getItem("@sessions_count");
     const current = saved ? Number(saved) : 0;
@@ -393,7 +392,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
             ))}
           </View>
 
-          {/* CONTENIDO */}
+         
           <ScrollView
             style={styles.container}
             contentContainerStyle={{ paddingBottom: 18 }}
@@ -455,7 +454,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
               </LinearGradient>
             </View>
 
-            {/* BOTÓN: HICE UNA SESIÓN */}
+            {/* BOTON: HICE UNA SESIÓN */}
             <TouchableOpacity onPress={addSession} style={styles.sessionButton}>
               <Text style={styles.sessionButtonText}>Hice una sesión 🎧</Text>
             </TouchableOpacity>
@@ -468,7 +467,7 @@ const rotateConfigChevron = configRotateAnim.interpolate({
               </Text>
 
               <View style={styles.chipsRow}>
-                {["Tranquila 😌", "Nerviosa 😰", "Cansada 🥱"].map((item) => (
+                {["Tranquila😌", "Nerviosa 😰", "Cansada 🥱"].map((item) => (
                   <TouchableOpacity
                     key={item}
                     style={[styles.chip, mood === item && styles.chipActive]}

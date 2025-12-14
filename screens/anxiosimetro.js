@@ -244,7 +244,7 @@ export default function Anxiosimetro({ navigation, route }) {
   return (
     <LinearGradient colors={['#f3e8ff', '#faf5ff']} style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        {/* NAV BAR (queda fija arriba) */}
+        {/* NAV BAR (queda fija arriba), ahora si ya no se les va mover en el celular jejesfg*/}
         <View style={styles.navBar}>
           {[
             ['stats-chart-outline', 'Anxiósometro'],
@@ -274,7 +274,7 @@ export default function Anxiosimetro({ navigation, route }) {
           ))}
         </View>
 
-        {/* ✅ AHORA TODO ES SCROLL VERTICAL */}
+        
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={styles.scrollContent}
@@ -314,7 +314,7 @@ export default function Anxiosimetro({ navigation, route }) {
             );
           })}
 
-          {/* Tu carrusel horizontal se queda igual */}
+         
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
             <View style={[styles.whiteCard, { width: CARD_W }]}>
               <Image
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ✅ Nuevo: estilo para el ScrollView vertical
+  // estilo para el Scroll vertical
   scrollContent: {
     alignItems: 'center',
     padding: 10,

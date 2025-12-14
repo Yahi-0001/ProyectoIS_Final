@@ -55,9 +55,6 @@ export default function Login({navigation}) {
     }
   };
 
-
-
-
   return (
     <LinearGradient
       colors={['#fdf2ff', '#e0f2fe']}
@@ -66,7 +63,7 @@ export default function Login({navigation}) {
       style={styles.background}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        {/* 🔑 Esto hace que la pantalla se mueva con el teclado */}
+        {/*Esto hace que la pantalla se mueva con el teclado */}
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

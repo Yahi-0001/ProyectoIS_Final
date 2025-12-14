@@ -91,7 +91,7 @@ export default function CheckingScreen({ navigation }) {
 
 
   const ensureNotifPermission = async () => {
-    // En emulador a veces no funcionan bien.
+    // En emulador a veces no funcionan bien debemos probar en apk niñasss
     if (!Device.isDevice) return false;
 
     const { status } = await Notifications.getPermissionsAsync();
@@ -218,7 +218,7 @@ export default function CheckingScreen({ navigation }) {
       //programar notis del test (11:20 y 19:00) si no lo ha hecho hoy
       await scheduleTestRemindersIfNeeded(hechoHoy);
 
-      // ¿ya pasaron las 11:20 am?
+      // ¿ya pasaron las 11:20 am? se desbloquea el test
       const hora = ahora.getHours(); // 0-23
       const minutos = ahora.getMinutes(); // 0-59
       const yaEs1120 = hora > 11 || (hora === 11 && minutos >= 20);
@@ -309,7 +309,7 @@ export default function CheckingScreen({ navigation }) {
     }
   };
 
-  // TEST PERSONALIDAD ------------------------------------------------
+  // TEST PERSONALIDAD ------------------------------------------------chanchan
   const handleTestPersonalidad = async () => {
     try {
       const testYaHecho = await AsyncStorage.getItem("testPersonalidadHecho");
@@ -342,7 +342,7 @@ export default function CheckingScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        {/* NAV BAR */}
+        {/*Barra de navegacion*/}
         <View style={styles.navBar}>
           {[
             ["stats-chart-outline", "Anxiósometro"],

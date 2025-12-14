@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
-// --- Animación de caritas neutrales para resultado MODERADO ---
+// Animación de caritas neutrales para resultado MODERADO
 function NeutralFaces() {
   const caras = Array.from({ length: 20 }, (_, i) => i);
   return (
@@ -64,7 +64,7 @@ function AnimatedNeutralFace() {
   );
 }
 
-// --- Animación de caritas llorando para resultado ALTO ---
+// Animación de caritas llorando para resultado ALTO 
 function CryingFaces() {
   const caras = Array.from({ length: 20 }, (_, i) => i);
   return (
@@ -111,7 +111,7 @@ function AnimatedCryingFace() {
   );
 }
 
-// ✅ Loader de 3 puntitos animados (sin librerías extra)
+//Loader de 3 puntitos animado
 function DotLoader() {
   const a1 = useRef(new Animated.Value(0.25)).current;
   const a2 = useRef(new Animated.Value(0.25)).current;
@@ -151,7 +151,7 @@ function DotLoader() {
   );
 }
 
-// --- Configurar comportamiento de notificaciones solo si NO es Expo Go ---
+// Configurar comportamiento de notificacionws fuera de expo go
 if (Constants.executionEnvironment !== 'storeClient') {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -188,13 +188,13 @@ export default function Test({ navigation }) {
   const [resultado, setResultado] = useState(null);
   const progresoAnim = useRef(new Animated.Value(0)).current;
 
-  // ✅ Modal flotante
+  //Modal flotante
   const [showConfigModal, setShowConfigModal] = useState(false);
 
-  // ✅ Para evitar doble toque
+  //Para evitar doble toque
   const [isConfiguring, setIsConfiguring] = useState(false);
 
-  // Configurar notificaciones solo fuera de Expo Go
+  //Configurar notificaciones solo fuera de Expo Go
   useEffect(() => {
     if (Constants.executionEnvironment === 'storeClient') return;
 
@@ -266,7 +266,7 @@ export default function Test({ navigation }) {
     setResultado({ total, nivel, color, fondo, consejo });
   };
 
-  // ✅ MODIFICADO: modal + loader + 7s + evita doble toque
+  //MODIFICADO: modal + loader + 7s + evita doble toque
   const iniciarMonitoreo = async () => {
     if (isConfiguring) return;
 
@@ -288,7 +288,7 @@ export default function Test({ navigation }) {
         });
       }
 
-      // ✅ Espera 7s (7000 ms)
+      // Espera 7s (7000 ms)
       setTimeout(() => {
         setShowConfigModal(false);
         setIsConfiguring(false);
@@ -306,12 +306,12 @@ export default function Test({ navigation }) {
     outputRange: ['0%', '100%'],
   });
 
-  // --- Pantalla de Resultado ---
+  //  Pantalla de Resultado 
   if (resultado) {
     return (
       <LinearGradient colors={resultado.fondo} style={styles.resultContainer}>
         <SafeAreaView style={{ alignItems: 'center' }}>
-          {/* ✅ MODAL FLOTANTE MÁS GRANDE + LOADER */}
+       
           <Modal transparent visible={showConfigModal} animationType="fade">
             <View style={styles.modalOverlay}>
               <View style={styles.modalCard}>
@@ -382,7 +382,7 @@ export default function Test({ navigation }) {
     );
   }
 
-  // --- Pantalla de Preguntas ---
+  // Pantalla de Preguntas 
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient colors={['#a6c1ee', '#fbc2eb']} style={styles.background}>
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   },
   monitorText: { color: 'white', fontWeight: '600', fontSize: 16 },
 
-  // ✅ MODAL MÁS GRANDE
+  //MODAL MÁS GRANDE
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.40)',
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // ✅ DOT LOADER
+  // cargando...
   dotsRow: {
     flexDirection: 'row',
     marginTop: 16,
