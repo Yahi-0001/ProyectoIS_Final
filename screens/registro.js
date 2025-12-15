@@ -33,7 +33,10 @@ export default function Registro({ navigation }) {
   const [errores, setErrores] = useState({});
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
-  const [mensajeExito, setMensajeExito] = useState('');
+  const [mensajeExito, setMensajeExito] = useState("");
+  const [nombre, setNombre] = useState('');
+
+
 
   const handleRegistro = async () => {
     let nuevosErrores = {};
@@ -56,6 +59,7 @@ export default function Registro({ navigation }) {
       const user = userCredential.user;
 
       await setDoc(doc(db, 'usuarios', user.uid), {
+        nombre,
         correo,
         pais,
         telefono,
@@ -142,6 +146,17 @@ export default function Registro({ navigation }) {
               keyboardType="email-address"
             />
             {errores.correo && <Text style={styles.error}>{errores.correo}</Text>}
+
+            {/* Nombre */}
+            <Text style={styles.label}>Ingresa tu nombre</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre"
+              placeholderTextColor="#999"
+              value={nombre}
+              onChangeText={setNombre}
+            />
+            {errores.nombre && <Text style={styles.error}>{errores.nombre}</Text>}
 
             {/* País */}
             <Text style={styles.label}>Ingresa tu país</Text>
