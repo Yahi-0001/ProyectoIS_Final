@@ -95,7 +95,7 @@ export default function Login({navigation}) {
             <View style={styles.card}>
               {/* Imagen */}
               <Image
-                source={require('../assets/loginIllustration.png')}
+                source={require('../assets/ilustrar.jpg')}
                 style={styles.image}
               />
 
