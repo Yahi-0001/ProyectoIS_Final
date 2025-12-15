@@ -33,6 +33,7 @@ export default function Registro({ navigation }) {
   const [errores, setErrores] = useState({});
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState('');
 
   const handleRegistro = async () => {
     let nuevosErrores = {};
