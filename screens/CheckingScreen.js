@@ -12,12 +12,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -26,7 +24,6 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
 
 const TEST_REMINDER_DATE_KEY = "testDiarioReminderDate";
 const TEST_REMINDER_1120_KEY = "testDiarioReminder_1120";
@@ -82,13 +79,12 @@ export default function CheckingScreen({ navigation }) {
   const [testPersonalidadHecho, setTestPersonalidadHecho] = useState(false);
   const [resultadoPersonalidad, setResultadoPersonalidad] = useState(null);
 
-  // controla si hoy ya se puede hacer el test (después de las 11:20)
+  // controla si hoy ya se puede hacer el test (después de las 5:00)
   const [puedeHacerTestHoy, setPuedeHacerTestHoy] = useState(false);
 
   useEffect(() => {
     cargarEstado();
   }, []);
-
 
   const ensureNotifPermission = async () => {
     // En emulador a veces no funcionan bien debemos probar en apk niñasss
@@ -136,7 +132,6 @@ export default function CheckingScreen({ navigation }) {
     const today = new Date().toISOString().slice(0, 10);
     const already = await AsyncStorage.getItem(TEST_REMINDER_DATE_KEY);
 
-
     if (already === today) return;
 
     const now = new Date();
@@ -145,12 +140,12 @@ export default function CheckingScreen({ navigation }) {
       const d = new Date();
       d.setHours(h, m, 0, 0);
 
-
       if (now > d) d.setSeconds(d.getSeconds() + 5);
       return d;
     };
 
-    const date1120 = makeDate(11, 20);
+    //5:00 AM
+    const date1120 = makeDate(5, 0);
     const date1900 = makeDate(19, 0);
 
     const id1120 = await Notifications.scheduleNotificationAsync({
@@ -206,7 +201,7 @@ export default function CheckingScreen({ navigation }) {
         }
       }
 
-      // Test diario - una vez por día y solo después de las 11:20 am
+      // Test diario - una vez por día y solo después de las 5:00 am
       const storedFechaTest = await AsyncStorage.getItem("ultimaFechaTest");
       const ahora = new Date();
       const hoyStr = ahora.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -215,17 +210,17 @@ export default function CheckingScreen({ navigation }) {
       const hechoHoy = storedFechaTest === hoyStr;
       setTestRealizadoHoy(hechoHoy);
 
-      //programar notis del test (11:20 y 19:00) si no lo ha hecho hoy
+      //programar notis del test (5:00 y 19:00) si no lo ha hecho hoy
       await scheduleTestRemindersIfNeeded(hechoHoy);
 
-      // ¿ya pasaron las 11:20 am? se desbloquea el test
+      //CAMBIO: ¿ya pasaron las 5:00 am? se desbloquea el test
       const hora = ahora.getHours(); // 0-23
       const minutos = ahora.getMinutes(); // 0-59
-      const yaEs1120 = hora > 11 || (hora === 11 && minutos >= 20);
+      const yaEs1120 = hora >= 5;
 
       // puedes hacer el test SOLO si:
       // - todavía no lo hiciste hoy
-      // - y ya pasaron las 11:20
+      // - y ya pasaron las 5:00
       setPuedeHacerTestHoy(!hechoHoy && yaEs1120);
 
       // Test personalidad, una vez
@@ -297,7 +292,6 @@ export default function CheckingScreen({ navigation }) {
     try {
       const hoyStr = new Date().toISOString().slice(0, 10);
       await AsyncStorage.setItem("ultimaFechaTest", hoyStr);
-
 
       await cancelTestReminders();
 
@@ -415,7 +409,7 @@ export default function CheckingScreen({ navigation }) {
                 {testRealizadoHoy
                   ? "Test realizado"
                   : !puedeHacerTestHoy
-                  ? "Disponible a las 11:20 am"
+                  ? "Disponible a las 5:00 am"
                   : "Hacer test"}
               </Text>
             </TouchableOpacity>
@@ -673,4 +667,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
   },
-}); 
+});
